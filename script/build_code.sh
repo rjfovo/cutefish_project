@@ -1,7 +1,8 @@
 #!/bin/bash
 
 script_path=`pwd`
-cd ${script_path}/../cutefish
+script_path=${script_path}/../cutefish
+cd ${script_path}
 
 package_dir=output
 build_dir=code
@@ -153,6 +154,7 @@ cd ${package_dir}
 [[ -d ${build_dir} ]] || mkdir ${build_dir}
 [[ -d ${deb_dir} ]] || mkdir ${deb_dir}
 [[ -d ${dbgsym_dir} ]] || mkdir ${dbgsym_dir}
+[[ -d ${log_dir} ]] || mkdir ${log_dir}
 
 if [ $# -lt 1 ];then
     help
