@@ -27,6 +27,8 @@ function build_iso()
     mkdir -p ${code_project_path}/package
     mkdir -p ${code_project_path}/package/cutefish
 
+    cp -f ${CURR_PATH}/../cutefish/output/debs/* ${code_project_path}/package/cutefish
+
     exit 0
 }
 

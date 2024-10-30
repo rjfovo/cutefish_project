@@ -6,8 +6,7 @@ if [ ! -d ${CUTEFISH_PACKAGE_PATH} ]; then
     mkdir -p ${CUTEFISH_PACKAGE_PATH}
 fi
 
+rm -f ${CUTEFISH_PACKAGE_PATH}/*.deb
+cp -f ${CURR_PATH}/../cutefish/output/debs/* ${CUTEFISH_PACKAGE_PATH}
 
-scp root@192.168.36.129:/workspace/cutefish_project/build_iso/package/cutefish/*.deb ${CUTEFISH_PACKAGE_PATH}
-
-
-exit
+exit 0
