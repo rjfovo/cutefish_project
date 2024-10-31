@@ -6,9 +6,9 @@ code_path=${script_path}/../cutefish/code
 if [ ! -d ${code_path} ];then
 	mkdir -p ${code_path}
 fi
-cd ${code_path}
+cd ${script_path}/..
 
-cutefish_url=https://github.com/rjfovo
+cutefish_url=git@github.com:rjfovo
 git_repos=(
 	core
 	launcher
@@ -39,9 +39,12 @@ git_repos=(
 	wallpapers
 )
 
+git rm -r --cached ${code_path}
+
 repo_len=${#git_repos[@]}
 for (( i = 0; i  < ${repo_len}; i++ )); do
-	git clone ${cutefish_url}/${git_repos[i]}.git
+	# git clone ${cutefish_url}/${git_repos[i]}.git
+	git submodule add ${cutefish_url}/${git_repos[i]}.git ${code_path}
 done
 
 exit 0

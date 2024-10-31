@@ -1,6 +1,0 @@
-[submodule "core"]
-	path = core
-	url = git@github.com:rjfovo/core.git
-[submodule "cutefish/code"]
-	path = cutefish/code
-	url = git@github.com:rjfovo/core.git
