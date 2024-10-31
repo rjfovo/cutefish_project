@@ -39,12 +39,10 @@ git_repos=(
 	wallpapers
 )
 
-git rm -r --cached ${code_path}
-
 repo_len=${#git_repos[@]}
 for (( i = 0; i  < ${repo_len}; i++ )); do
 	# git clone ${cutefish_url}/${git_repos[i]}.git
-	git submodule add ${cutefish_url}/${git_repos[i]}.git ${code_path}
+	git submodule add ${cutefish_url}/${git_repos[i]}.git ${code_path}/${git_repos[i]}
 done
 
 exit 0
