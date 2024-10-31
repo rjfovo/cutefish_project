@@ -1,0 +1,81 @@
+[submodule "/workspace/cutefish_project/cutefish/code/core"]
+	path = /workspace/cutefish_project/cutefish/code/core
+	url = git@github.com:rjfovo/core.git
+[submodule "/workspace/cutefish_project/cutefish/code/launcher"]
+	path = /workspace/cutefish_project/cutefish/code/launcher
+	url = git@github.com:rjfovo/launcher.git
+[submodule "/workspace/cutefish_project/cutefish/code/dock"]
+	path = /workspace/cutefish_project/cutefish/code/dock
+	url = git@github.com:rjfovo/dock.git
+[submodule "/workspace/cutefish_project/cutefish/code/statusbar"]
+	path = /workspace/cutefish_project/cutefish/code/statusbar
+	url = git@github.com:rjfovo/statusbar.git
+[submodule "/workspace/cutefish_project/cutefish/code/screenlocker"]
+	path = /workspace/cutefish_project/cutefish/code/screenlocker
+	url = git@github.com:rjfovo/screenlocker.git
+[submodule "/workspace/cutefish_project/cutefish/code/daemon"]
+	path = /workspace/cutefish_project/cutefish/code/daemon
+	url = git@github.com:rjfovo/daemon.git
+[submodule "/workspace/cutefish_project/cutefish/code/libcutefish"]
+	path = /workspace/cutefish_project/cutefish/code/libcutefish
+	url = git@github.com:rjfovo/libcutefish.git
+[submodule "/workspace/cutefish_project/cutefish/code/settings"]
+	path = /workspace/cutefish_project/cutefish/code/settings
+	url = git@github.com:rjfovo/settings.git
+[submodule "/workspace/cutefish_project/cutefish/code/updator"]
+	path = /workspace/cutefish_project/cutefish/code/updator
+	url = git@github.com:rjfovo/updator.git
+[submodule "/workspace/cutefish_project/cutefish/code/fishui"]
+	path = /workspace/cutefish_project/cutefish/code/fishui
+	url = git@github.com:rjfovo/fishui.git
+[submodule "/workspace/cutefish_project/cutefish/code/kwin-plugins"]
+	path = /workspace/cutefish_project/cutefish/code/kwin-plugins
+	url = git@github.com:rjfovo/kwin-plugins.git
+[submodule "/workspace/cutefish_project/cutefish/code/sddm-theme"]
+	path = /workspace/cutefish_project/cutefish/code/sddm-theme
+	url = git@github.com:rjfovo/sddm-theme.git
+[submodule "/workspace/cutefish_project/cutefish/code/appmotor"]
+	path = /workspace/cutefish_project/cutefish/code/appmotor
+	url = git@github.com:rjfovo/appmotor.git
+[submodule "/workspace/cutefish_project/cutefish/code/qt-plugins"]
+	path = /workspace/cutefish_project/cutefish/code/qt-plugins
+	url = git@github.com:rjfovo/qt-plugins.git
+[submodule "/workspace/cutefish_project/cutefish/code/icons"]
+	path = /workspace/cutefish_project/cutefish/code/icons
+	url = git@github.com:rjfovo/icons.git
+[submodule "/workspace/cutefish_project/cutefish/code/gtk-themes"]
+	path = /workspace/cutefish_project/cutefish/code/gtk-themes
+	url = git@github.com:rjfovo/gtk-themes.git
+[submodule "/workspace/cutefish_project/cutefish/code/cursor-themes"]
+	path = /workspace/cutefish_project/cutefish/code/cursor-themes
+	url = git@github.com:rjfovo/cursor-themes.git
+[submodule "/workspace/cutefish_project/cutefish/code/filemanager"]
+	path = /workspace/cutefish_project/cutefish/code/filemanager
+	url = git@github.com:rjfovo/filemanager.git
+[submodule "/workspace/cutefish_project/cutefish/code/debinstaller"]
+	path = /workspace/cutefish_project/cutefish/code/debinstaller
+	url = git@github.com:rjfovo/debinstaller.git
+[submodule "/workspace/cutefish_project/cutefish/code/texteditor"]
+	path = /workspace/cutefish_project/cutefish/code/texteditor
+	url = git@github.com:rjfovo/texteditor.git
+[submodule "/workspace/cutefish_project/cutefish/code/terminal"]
+	path = /workspace/cutefish_project/cutefish/code/terminal
+	url = git@github.com:rjfovo/terminal.git
+[submodule "/workspace/cutefish_project/cutefish/code/screenshot"]
+	path = /workspace/cutefish_project/cutefish/code/screenshot
+	url = git@github.com:rjfovo/screenshot.git
+[submodule "/workspace/cutefish_project/cutefish/code/calculator"]
+	path = /workspace/cutefish_project/cutefish/code/calculator
+	url = git@github.com:rjfovo/calculator.git
+[submodule "/workspace/cutefish_project/cutefish/code/videoplayer"]
+	path = /workspace/cutefish_project/cutefish/code/videoplayer
+	url = git@github.com:rjfovo/videoplayer.git
+[submodule "/workspace/cutefish_project/cutefish/code/calamares"]
+	path = /workspace/cutefish_project/cutefish/code/calamares
+	url = git@github.com:rjfovo/calamares.git
+[submodule "/workspace/cutefish_project/cutefish/code/plymouth-theme"]
+	path = /workspace/cutefish_project/cutefish/code/plymouth-theme
+	url = git@github.com:rjfovo/plymouth-theme.git
+[submodule "/workspace/cutefish_project/cutefish/code/wallpapers"]
+	path = /workspace/cutefish_project/cutefish/code/wallpapers
+	url = git@github.com:rjfovo/wallpapers.git
