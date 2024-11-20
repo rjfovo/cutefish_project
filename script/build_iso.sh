@@ -8,16 +8,14 @@ DEBIAN_CHROOT=${LIVE_BOOT}/chroot
 
 if [ "$1" == "--clean" ];then
     echo "$LIVE_BOOT 已经目录存在，正在删除..."
-    rm -rf $LIVE_BOOT
+    rm -rf $LIVE_BOOT/../LIVE_BOOT/*
     echo "目录已删除"
     exit 0;
-fi
-
-if [ "$1" == "--rebuild" ];then
+elif [ "$1" == "--rebuild" ];then
     # 删除已经存在的workspace目录
     if [ -d "$LIVE_BOOT" ]; then
         echo "$LIVE_BOOT 已经目录存在，正在删除..."
-        rm -rf $LIVE_BOOT
+        rm -rf $LIVE_BOOT/../LIVE_BOOT/*
         echo "目录已删除"
     fi
     mkdir -p "$LIVE_BOOT"
@@ -29,10 +27,21 @@ if [ "$1" == "--rebuild" ];then
         stable \
         "${DEBIAN_CHROOT}" \
         http://mirrors.163.com/debian/
+elif [ "$1" == "--build" ];then
+    echo "start build"
+else
+    echo "option: "
+    echo "--clean"
+    echo "--rebuild"
+    echo "--build"
+    exit 0
 fi
 
 echo "cutefish-live" | sudo tee "${DEBIAN_CHROOT}/etc/hostname"
 
+mount --bind /dev /mnt/disk1/LIVE_BOOT/chroot/dev
+mount -t proc proc /mnt/disk1/LIVE_BOOT/chroot/proc
+mount -t sysfs sysfs /mnt/disk1/LIVE_BOOT/chroot/sys
 
 # 安装基础软件
 sudo chroot "${DEBIAN_CHROOT}" << EOF
@@ -44,7 +53,8 @@ apt-get install -y --no-install-recommends \
     sudo \
     iproute2 \
     dbus \
-    network-manager
+    network-manager \
+    vim
 EOF
 
 sudo chroot "${DEBIAN_CHROOT}" << EOF
@@ -59,33 +69,41 @@ sudo chroot "${DEBIAN_CHROOT}" << EOF
     usermod -aG sudo cutefish-live
 EOF
 
+# 创建root用户设置密码
+sudo chroot "${DEBIAN_CHROOT}" << EOF
+    echo root:root | chpasswd &> /dev/null
+EOF
+
 # # 安装cutefish安装器
 mkdir ${DEBIAN_CHROOT}/package
 cp ../build_iso/package/cutefish/*.deb ${DEBIAN_CHROOT}/package/
 
-# # 安装所有cutefish软件
-# sudo chroot "${DEBIAN_CHROOT}" << EOF
-#     cd /package
-#     dpkg -i *.deb
-#     rm -f /var/cache/apt/archives/*
-#     apt --fix-broken -d install -y
-#     cd /var/cache/apt/archives/
-#     dpkg -i --force-overwrite *.deb
-#     apt --fix-broken install -y
-#     cd /package
-#     dpkg -i --force-overwrite *.deb
-#     apt remove kdeconnect -y
-#     apt remove zutty -y 
-#     apt remove plasma-discover -y
-#     apt remove systemsettings -y
-#     apt remove plasma-systemmonitor -y
-#     apt remove partitionmanager -y
-#     apt remove kwalletmanager -y
-#     apt remove plasma-workspace -y
-#     rm -f /var/cache/apt/archives/*
-# EOF
-# rm -rf ${DEBIAN_CHROOT}/package
+# 安装所有cutefish软件
+sudo chroot "${DEBIAN_CHROOT}" << EOF
+    cd /package
+    dpkg -i *.deb
+    rm -f /var/cache/apt/archives/*
+    apt --fix-broken -d install -y
+    cd /var/cache/apt/archives/
+    dpkg -i --force-overwrite *.deb
+    apt --fix-broken install -y
+    cd /package
+    dpkg -i --force-overwrite *.deb
+    apt remove kdeconnect -y
+    apt remove zutty -y 
+    apt remove plasma-discover -y
+    apt remove systemsettings -y
+    apt remove plasma-systemmonitor -y
+    apt remove partitionmanager -y
+    apt remove kwalletmanager -y
+    apt remove plasma-workspace -y
+    rm -f /var/cache/apt/archives/*
+EOF
+rm -rf ${DEBIAN_CHROOT}/package
 
+umount /mnt/disk1/LIVE_BOOT/chroot/dev
+umount /mnt/disk1/LIVE_BOOT/chroot/proc
+umount /mnt/disk1/LIVE_BOOT/chroot/sys
 
 # 创建构建iso所需目录
 mkdir -p "${LIVE_BOOT}"/{staging/{EFI/BOOT,boot/grub/x86_64-efi,isolinux,live},tmp}

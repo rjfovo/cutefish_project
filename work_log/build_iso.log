@@ -1,3 +1,28 @@
 工作目标：构建一个可安装iso
 1. 使用cutefish的calamares配置改造我的calamares
 2. 构建live-cd 
+
+2024-11-11： 
+在livecd中只安装calamares
+
+dpkg -i cutefish-calamares_0.5_amd64.deb
+apt --fix-broken install
+
+apt install locales		# 语言设置
+apt install dialog		# 终端界面显示
+dpkg-reconfigure locales # 配置语言
+
+apt-get install xfonts-intl-chinese  安装中文字体
+apt-get install ttf-wqy-microhei
+
+apt-get install fonts-dejavu-extra
+apt-get install fonts-freefont-ttf
+apt-get install fonts-liberation
+apt-get install fonts-unifont
+
+# 分区无法探测
+
+
+
+工作日志记录：
+1. 构建的iso，用root用户运行startx能直接运行桌面
