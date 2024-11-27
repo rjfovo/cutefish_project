@@ -26,7 +26,7 @@ elif [ "$1" == "--rebuild" ];then
         --variant=minbase \
         stable \
         "${DEBIAN_CHROOT}" \
-        http://mirrors.163.com/debian/
+        https://mirrors.aliyun.com/debian/
 elif [ "$1" == "--build" ];then
     echo "start build"
 else
@@ -67,6 +67,7 @@ sudo chroot "${DEBIAN_CHROOT}" << EOF
     useradd cutefish-live
     echo cutefish-live:cutefish | chpasswd &> /dev/null
     usermod -aG sudo cutefish-live
+    mkdir -p /home/cutefish-live
 EOF
 
 # 创建root用户设置密码
@@ -97,9 +98,20 @@ sudo chroot "${DEBIAN_CHROOT}" << EOF
     apt remove partitionmanager -y
     apt remove kwalletmanager -y
     apt remove plasma-workspace -y
+    apt autoremove -y
     rm -f /var/cache/apt/archives/*
 EOF
 rm -rf ${DEBIAN_CHROOT}/package
+
+# 创建自动登录终端
+mkdir -p ${DEBIAN_CHROOT}/etc/systemd/system/getty@tty1.service.d/
+cp ../build_iso/config/autologin.conf ${DEBIAN_CHROOT}/etc/systemd/system/getty@tty1.service.d/autologin.conf
+
+# 关闭sddm,默认启动iso安装程序
+sudo chroot "${DEBIAN_CHROOT}" << EOF
+    systemctl disable sddm.service
+    echo "/usr/bin/startx /usr/bin/calamares &" >> /root/.bashrc
+EOF
 
 umount /mnt/disk1/LIVE_BOOT/chroot/dev
 umount /mnt/disk1/LIVE_BOOT/chroot/proc

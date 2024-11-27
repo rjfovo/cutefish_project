@@ -26,3 +26,7 @@ apt-get install fonts-unifont
 
 工作日志记录：
 1. 构建的iso，用root用户运行startx能直接运行桌面
+    问题在于，livecd怎么开机通过startx启动桌面
+
+2024-11-27:
+    todo： 打包镜像测试改动能否自动登录桌面
