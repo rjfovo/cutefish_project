@@ -97,13 +97,18 @@ rm -rf ${DEBIAN_CHROOT}/package
 # cp ../build_iso/script/cutefish_installer ${DEBIAN_CHROOT}/usr/bin
 
 cp ../build_iso/script/user/myuser ${DEBIAN_CHROOT}/usr/bin
+cp ../build_iso/script/live/cutefish_installer ${DEBIAN_CHROOT}/usr/bin
 
 cp ../build_iso/config/sddm_autologin.conf ${DEBIAN_CHROOT}/etc/sddm.conf.d/autologin.conf
+cp ../build_iso/config/cutefish-installer.desktop ${DEBIAN_CHROOT}/etc/xdg/autostart
 
-# 创建用户设置密码
+# 创建live用户以及设置免密登录
 sudo chroot "${DEBIAN_CHROOT}" << EOF
     chmod u+x /usr/bin/myuser
+    chmod u+x /usr/bin/cutefish_installer
+
     myuser --add cutefish-live cutefish
+    echo "cutefish-live ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 EOF
 
 # 创建root用户设置密码

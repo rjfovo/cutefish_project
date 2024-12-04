@@ -39,3 +39,6 @@ apt-get install fonts-unifont
 2024-12-01:
     todo:还是优先查sddm为啥登录成功后黑屏吧
     发现：用cutefish桌面创建的用户能启动桌面，用命令创建的用户缺乏一些配置无法启动
+
+2024-12-04:
+    cutefish_installer没有权限执行命令
