@@ -42,3 +42,6 @@ apt-get install fonts-unifont
 
 2024-12-04:
     cutefish_installer没有权限执行命令
+
+2024-12-05:
+    todo: 实现calamares将程序安装到磁盘上
