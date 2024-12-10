@@ -54,7 +54,9 @@ apt-get install -y --no-install-recommends \
     iproute2 \
     dbus \
     network-manager \
-    vim
+    vim \
+    squashfs-tools \
+    grub2
 EOF
 
 sudo chroot "${DEBIAN_CHROOT}" << EOF
@@ -109,6 +111,8 @@ sudo chroot "${DEBIAN_CHROOT}" << EOF
 
     myuser --add cutefish-live cutefish
     echo "cutefish-live ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "export PATH=/usr/sbin:\$PATH" >> /home/cutefish-live/user/.bashrc
+    cat /home/cutefish-live/user/.bashrc
 EOF
 
 # 创建root用户设置密码
@@ -135,7 +139,7 @@ mkdir -p "${LIVE_BOOT}"/{staging/{EFI/BOOT,boot/grub/x86_64-efi,isolinux,live},t
 sudo mksquashfs \
     "${DEBIAN_CHROOT}" \
     "${LIVE_BOOT}/staging/live/filesystem.squashfs" \
-    -e boot
+    #-e boot  # 会导致安装时出问题，先不禁用
 
 # 拷贝内核等相关文件
 cp "${DEBIAN_CHROOT}/boot"/vmlinuz-* \
