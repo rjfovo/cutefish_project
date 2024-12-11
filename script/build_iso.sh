@@ -27,6 +27,8 @@ elif [ "$1" == "--rebuild" ];then
         stable \
         "${DEBIAN_CHROOT}" \
         https://mirrors.aliyun.com/debian/
+
+        exit 0
 elif [ "$1" == "--build" ];then
     echo "start build"
 else
@@ -120,13 +122,6 @@ sudo chroot "${DEBIAN_CHROOT}" << EOF
     echo root:root | chpasswd &> /dev/null
 EOF
 
-# 关闭sddm,默认启动iso安装程序
-# sudo chroot "${DEBIAN_CHROOT}" << EOF
-#     chmod u+x /usr/bin/cutefish_installer
-#     echo "/usr/bin/cutefish_installer &" >> /root/.bashrc
-
-#     systemctl disable sddm.service
-# EOF
 
 umount /mnt/disk1/LIVE_BOOT/chroot/dev
 umount /mnt/disk1/LIVE_BOOT/chroot/proc
@@ -139,7 +134,7 @@ mkdir -p "${LIVE_BOOT}"/{staging/{EFI/BOOT,boot/grub/x86_64-efi,isolinux,live},t
 sudo mksquashfs \
     "${DEBIAN_CHROOT}" \
     "${LIVE_BOOT}/staging/live/filesystem.squashfs" \
-    #-e boot  # 会导致安装时出问题，先不禁用
+    #-e boot  # 不安装boot会导致安装时出问题，先禁用
 
 # 拷贝内核等相关文件
 cp "${DEBIAN_CHROOT}/boot"/vmlinuz-* \

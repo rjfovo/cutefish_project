@@ -49,3 +49,6 @@ apt-get install fonts-unifont
 2024-12-11:
     目前实现将系统安装到磁盘上了
     todo:虽然系统安装到磁盘上了，但是系统是live系统，需要构建一个用户使用的系统
+
+2024-12-11:
+    done: 调整build_iso脚本，创建安装用的filesystem
