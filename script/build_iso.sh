@@ -27,8 +27,6 @@ elif [ "$1" == "--rebuild" ];then
         stable \
         "${DEBIAN_CHROOT}" \
         https://mirrors.aliyun.com/debian/
-
-        exit 0
 elif [ "$1" == "--build" ];then
     echo "start build"
 else
