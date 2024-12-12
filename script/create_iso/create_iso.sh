@@ -8,7 +8,7 @@ mkdir -p "${LIVE_BOOT}"/{staging/{EFI/BOOT,boot/grub/x86_64-efi,isolinux,live},t
 # 打包install rootfs
 sudo mksquashfs \
     "${DEBIAN_INSTALL_CHROOT}" \
-    "${LIVE_BOOT}/staging/live/install_filesystem.squashfs"
+    "${LIVE_BOOT}/staging/live/filesystem.squashfs"
 
 # 打包live rootfs
 sudo mksquashfs \

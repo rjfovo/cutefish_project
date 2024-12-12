@@ -9,11 +9,11 @@ mkdir -p ${DEBIAN_LIVE_CHROOT}
 if [ -f ${DEBIAN_SOURCE}/chroot.tar.gz ];then
     tar -xzvf ${DEBIAN_SOURCE}/chroot.tar.gz -C ${DEBIAN_LIVE_CHROOT}
 
-    PWD=`pwd`
+    BUILD_PATH=`pwd`
     cd ${DEBIAN_LIVE_CHROOT}
     mv ${DEBIAN_LIVE_CHROOT}/chroot/* ./
     rm -r chroot
-    cd ${PWD}
+    cd ${BUILD_PATH}
 else
     # 下载debian base
     sudo debootstrap \
@@ -51,6 +51,7 @@ apt-get install -y --no-install-recommends \
 EOF
 
 # # 安装cutefish安装器
+pwd
 mkdir ${DEBIAN_LIVE_CHROOT}/package
 cp ${BUILD_PACKAGE}/cutefish/*.deb ${DEBIAN_LIVE_CHROOT}/package/
 

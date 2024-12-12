@@ -10,11 +10,11 @@ mkdir -p ${DEBIAN_INSTALL_CHROOT}
 if [ -f ${DEBIAN_SOURCE}/chroot.tar.gz ];then
     tar -xzvf ${DEBIAN_SOURCE}/chroot.tar.gz -C ${DEBIAN_INSTALL_CHROOT}
     
-    PWD=`pwd`
+    BUILD_PATH=`pwd`
     cd ${DEBIAN_LIVE_CHROOT}
     mv ${DEBIAN_LIVE_CHROOT}/chroot/* ./
     rm -r chroot
-    cd ${PWD}
+    cd ${BUILD_PATH}
 else
     # 下载debian base
     sudo debootstrap \
@@ -36,6 +36,7 @@ apt-get update && \
 apt-get install -y --no-install-recommends \
     linux-image-amd64 \
     systemd-sysv \
+    live-boot \
     sudo \
     iproute2 \
     dbus \
@@ -46,10 +47,11 @@ EOF
 
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
 apt-get install -y --no-install-recommends \
-    xserver-xorg-core xserver-xorg xinit
+    xserver-xorg-core xserver-xorg xinit  xterm 
 EOF
 
 # # 安装cutefish安装器
+pwd
 mkdir ${DEBIAN_INSTALL_CHROOT}/package
 cp ${BUILD_PACKAGE}/cutefish/*.deb ${DEBIAN_LIVE_CHROOT}/package/
 
