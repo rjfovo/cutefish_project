@@ -52,3 +52,7 @@ apt-get install fonts-unifont
 
 2024-12-11:
     done: 调整build_iso脚本，创建安装用的filesystem
+
+2024-12-18:
+    done：完成安装iso
+    todo: 测试iso基本功能，计划下一步工作

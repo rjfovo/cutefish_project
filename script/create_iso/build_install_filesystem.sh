@@ -11,8 +11,8 @@ if [ -f ${DEBIAN_SOURCE}/chroot.tar.gz ];then
     tar -xzvf ${DEBIAN_SOURCE}/chroot.tar.gz -C ${DEBIAN_INSTALL_CHROOT}
     
     BUILD_PATH=`pwd`
-    cd ${DEBIAN_LIVE_CHROOT}
-    mv ${DEBIAN_LIVE_CHROOT}/chroot/* ./
+    cd ${DEBIAN_INSTALL_CHROOT}
+    mv ${DEBIAN_INSTALL_CHROOT}/chroot/* ./
     rm -r chroot
     cd ${BUILD_PATH}
 else
@@ -47,13 +47,14 @@ EOF
 
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
 apt-get install -y --no-install-recommends \
-    xserver-xorg-core xserver-xorg xinit  xterm 
+    xserver-xorg-core xserver-xorg xinit
 EOF
 
 # # 安装cutefish安装器
 pwd
 mkdir ${DEBIAN_INSTALL_CHROOT}/package
-cp ${BUILD_PACKAGE}/cutefish/*.deb ${DEBIAN_LIVE_CHROOT}/package/
+cp ${BUILD_PACKAGE}/cutefish/*.deb ${DEBIAN_INSTALL_CHROOT}/package/
+rm -f ${DEBIAN_INSTALL_CHROOT}/package/cutefish-calamares_0.5_amd64.deb # 安装的系统不需要calamare包
 
 # 安装所有cutefish软件
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
