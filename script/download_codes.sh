@@ -37,6 +37,7 @@ git_repos=(
 	calamares
 	plymouth-theme
 	wallpapers
+	doc
 )
 
 repo_len=${#git_repos[@]}
