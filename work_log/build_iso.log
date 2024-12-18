@@ -71,3 +71,4 @@ apt-get install fonts-unifont
         5. systemd管理的服务实现监控
     4. 硬件管理器:
         管理系统的所接入的硬件
+    5. bug修复和系统调优
