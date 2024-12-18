@@ -79,3 +79,6 @@
 [submodule "/workspace/cutefish_project/cutefish/code/wallpapers"]
 	path = /workspace/cutefish_project/cutefish/code/wallpapers
 	url = git@github.com:rjfovo/wallpapers.git
+[submodule "cutefish/code/docs"]
+	path = cutefish/code/docs
+	url = git@github.com:rjfovo/docs.git
