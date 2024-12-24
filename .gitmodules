@@ -82,3 +82,6 @@
 [submodule "cutefish/code/docs"]
 	path = cutefish/code/docs
 	url = git@github.com:rjfovo/docs.git
+[submodule "cutefish/code/myos_base"]
+	path = cutefish/code/myos_base
+	url = git@github.com:rjfovo/myos_base.git
