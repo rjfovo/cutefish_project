@@ -1,0 +1,50 @@
+#!/bin/bash
+
+function help()
+{
+    echo "Usage: [OPTION]..."
+    echo "OPTION:"
+    echo "  --help"
+    echo "  --add [username] [password]"
+    echo "  --del [username]"
+}
+
+function create_user_dir()
+{
+    user_dir=/home/$1
+    if [ -d "$user_dir" ];then
+        echo "$user_dir is exits"
+        exit 127
+    fi
+
+    mkdir -p $user_dir
+    mkdir -p $user_dir/config
+
+    # 用户软件安装目录
+    mkdir -p $user_dir/program
+    mkdir -p $user_dir/program/app              # 管理appimage
+    mkdir -p $user_dir/program/local/bin        # 原生linux软件安装方式，用户如果要自己安装软件应该安装到这里，系统的目录以后只能安装系统自身的软件
+    mkdir -p $user_dir/program/local/etc
+    mkdir -p $user_dir/program/local/include
+    mkdir -p $user_dir/program/local/lib
+    mkdir -p $user_dir/program/local/man
+    mkdir -p $user_dir/program/local/sbin
+    mkdir -p $user_dir/program/local/share
+}
+
+function create_user()
+{
+    create_user_dir $1
+
+    user_dir=/home/$1
+    useradd -d ${user_dir}/user -m -k /etc/skel $1
+    echo $1:$2 | chpasswd &> /dev/null
+    usermod -aG sudo $1
+    usermod -s /bin/bash $1
+}
+
+if [ "$1" == "--add" ];then
+    create_user $2 $3
+else
+    help
+fi

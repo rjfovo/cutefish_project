@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install System
+GenericName=System Installer
+Keywords=calamares;system;installer;
+TryExec=calamares
+Exec=/usr/bin/cutefish_installer
+Comment=System Installer
+Icon=cutefish-installer
+Terminal=false
+StartupNotify=true
+Categories=Qt;System;
+X-AppStream-Ignore=true
