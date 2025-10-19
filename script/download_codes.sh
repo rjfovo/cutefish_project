@@ -6,7 +6,7 @@ code_path=${script_path}/../cutefish/code
 if [ ! -d ${code_path} ];then
 	mkdir -p ${code_path}
 fi
-cd ${script_path}/..
+cd ${code_path}
 
 cutefish_url=git@github.com:rjfovo
 git_repos=(
@@ -37,12 +37,11 @@ git_repos=(
 	calamares
 	plymouth-theme
 	wallpapers
-	doc
 )
 
 repo_len=${#git_repos[@]}
 for (( i = 0; i  < ${repo_len}; i++ )); do
-	# git clone ${cutefish_url}/${git_repos[i]}.git
+	git clone ${cutefish_url}/${git_repos[i]}.git
 	git submodule add ${cutefish_url}/${git_repos[i]}.git ${code_path}/${git_repos[i]}
 done
 
