@@ -101,8 +101,10 @@
                 "/usr/include/x86_64-linux-gnu/qt6/QtWlShellIntegration",
                 "/usr/include/x86_64-linux-gnu/qt6/QtXml",
                 "/usr/include/x86_64-linux-gnu/qt6/QtGui/6.8.2/QtGui/",
+                "/usr/include/x86_64-linux-gnu/qt6/QtGui/6.8.2/",
                 "/usr/include/xorg/",
-                "/usr/include/KF6/KWindowSystem/"
+                "/usr/include/KF6/KWindowSystem/",
+                "/usr/include/KF6/KCoreAddons/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
