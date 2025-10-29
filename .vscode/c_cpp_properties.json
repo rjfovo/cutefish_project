@@ -103,6 +103,7 @@
                 "/usr/include/x86_64-linux-gnu/qt6/QtGui/6.8.2/QtGui/",
                 "/usr/include/x86_64-linux-gnu/qt6/QtGui/6.8.2/",
                 "/usr/include/xorg/",
+                "/usr/include/",
                 "/usr/include/KF6/KWindowSystem/",
                 "/usr/include/KF6/KCoreAddons/"
             ],
