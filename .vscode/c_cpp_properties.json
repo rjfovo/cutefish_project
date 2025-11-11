@@ -105,7 +105,9 @@
                 "/usr/include/xorg/",
                 "/usr/include/",
                 "/usr/include/KF6/KWindowSystem/",
-                "/usr/include/KF6/KCoreAddons/"
+                "/usr/include/KF6/KCoreAddons/",
+                "/usr/include/KF6/KIOCore/",
+                "/usr/include/KF6/KIOWidgets/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
