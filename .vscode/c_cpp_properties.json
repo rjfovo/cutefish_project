@@ -107,7 +107,10 @@
                 "/usr/include/KF6/KWindowSystem/",
                 "/usr/include/KF6/KCoreAddons/",
                 "/usr/include/KF6/KIOCore/",
-                "/usr/include/KF6/KIOWidgets/"
+                "/usr/include/KF6/KIOWidgets/",
+                "/usr/include/qt6xdgiconloader/",
+                "/usr/include/KF6/KStatusNotifierItem/",
+                "/usr/include/KF6/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
