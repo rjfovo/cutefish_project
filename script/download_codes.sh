@@ -37,10 +37,16 @@ git_repos=(
 	calamares
 	plymouth-theme
 	wallpapers
+	fantascene-dynamic-wallpaper
 )
 
 repo_len=${#git_repos[@]}
 for (( i = 0; i  < ${repo_len}; i++ )); do
+	if [ -d ${git_repos[i]} ];then
+		echo "${git_repos[i]} is exists"
+		continue
+	fi
+	echo "${git_repos[i]} not exists, cloning..."
 	git clone ${cutefish_url}/${git_repos[i]}.git
 	git submodule add ${cutefish_url}/${git_repos[i]}.git ${code_path}/${git_repos[i]}
 done

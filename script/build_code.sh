@@ -1,6 +1,7 @@
 #!/bin/bash
 
-script_path=`pwd`
+# script_path=`pwd`
+script_path=/workspace/cutefish_project/script
 script_path=${script_path}/../cutefish
 cd ${script_path}
 
