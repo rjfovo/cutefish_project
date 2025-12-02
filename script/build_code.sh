@@ -40,6 +40,7 @@ git_repos=(
 	calamares
 	plymouth-theme
 	wallpapers
+    fantascene-dynamic-wallpaper
 )
 
 # build commands
