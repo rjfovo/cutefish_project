@@ -73,5 +73,6 @@
         "variant": "cpp",
         "kx11extras": "cpp"
     },
-    "cmake.sourceDirectory": "/workspace/cutefish_project/tmp/calamares.backup"
+    "cmake.sourceDirectory": "/workspace/cutefish_project/tmp/calamares.backup",
+    "git.ignoreLimitWarning": true
 }
