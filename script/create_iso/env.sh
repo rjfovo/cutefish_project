@@ -12,3 +12,8 @@ BUILD_SCRIPT=../../build_iso/script
 BUILD_PACKAGE=../../build_iso/package
 
 DEBIAN_SOURCE=/workspace/debian-sources/
+
+# cutefish apt repo dir
+CUTEFISH_APT_DIR=/mnt/apt-repo/cutefish
+CUTEFISH_APT_PACKAGE_DIR=${CUTEFISH_APT_DIR}/pool/non-free
+CUTEFISH_APT_INDEX_DIR=${CUTEFISH_APT_DIR}/dists/stable/non-free/binary-amd64

@@ -25,13 +25,18 @@ else
 fi
 
 mount --bind /dev ${DEBIAN_LIVE_CHROOT}/dev
+mount --bind /dev/pts ${DEBIAN_LIVE_CHROOT}/dev/pts
 mount -t proc proc ${DEBIAN_LIVE_CHROOT}/proc
 mount -t sysfs sysfs ${DEBIAN_LIVE_CHROOT}/sys
+mount --bind /run ${DEBIAN_LIVE_CHROOT}/run
+
+cp /etc/resolv.conf /mnt/etc/resolv.conf
 
 echo "cutefish-live" | sudo tee "${DEBIAN_LIVE_CHROOT}/etc/hostname"
 # 配置live环境
 sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
-apt-get update && \
+apt-get update 
+
 apt-get install -y --no-install-recommends \
     linux-image-amd64 \
     live-boot \
@@ -42,43 +47,94 @@ apt-get install -y --no-install-recommends \
     network-manager \
     vim \
     squashfs-tools \
-    grub2
+    grub2 \
+    python3 \
+    dialog \
+    locales \
+    ssh
+
+    apt install tasksel -y
+    tasksel install standard
 EOF
 
+# 配置字体
+sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
+    apt-get install -y --no-install-recommends \
+        xfonts-utils \
+        fontconfig \
+        fonts-noto-cjk
+
+    apt install  -y --no-install-recommends  locales locales-all \
+            fontconfig \
+            fonts-dejavu-core \
+            fonts-noto-core \
+            fonts-noto-cjk \
+            fonts-noto-color-emoji
+
+    apt install fonts-wqy-zenhei
+    fc-cache -fv
+
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+    echo 'LANG=en_US.UTF-8' > /etc/environment
+
+    locale
+    locale -a
+    fc-list | head
+EOF
+
+# 配置显示相关软件包
 sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
 apt-get install -y --no-install-recommends \
     xserver-xorg-core xserver-xorg xinit xterm 
 EOF
 
 # # 安装cutefish安装器
-pwd
-mkdir ${DEBIAN_LIVE_CHROOT}/package
-cp ${BUILD_PACKAGE}/cutefish/*.deb ${DEBIAN_LIVE_CHROOT}/package/
+BUILD_OLD_DIR=`pwd`
+# 在build系统中构建cutefish apt 软件包
+./build_apt.sh --rebuild
+
+# 启动http服务用于软件包访问
+killall -9 python3
+cd ${CUTEFISH_APT_DIR}
+python3 -m http.server 8080 &
+sleep 10 # 等待http服务启动
 
 # 安装所有cutefish软件
 sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
-    cd /package
-    dpkg -i *.deb
-    rm -f /var/cache/apt/archives/*
-    apt --fix-broken -d install -y
-    cd /var/cache/apt/archives/
-    dpkg -i --force-overwrite *.deb
-    apt --fix-broken install -y
-    cd /package
-    dpkg -i --force-overwrite *.deb
-    apt remove kdeconnect -y
-    apt remove zutty -y 
-    apt remove plasma-discover -y
-    apt remove systemsettings -y
-    apt remove plasma-systemmonitor -y
-    apt remove partitionmanager -y
-    apt remove kwalletmanager -y
-    apt remove plasma-workspace -y
-    
-    apt autoremove -y
-    rm -f /var/cache/apt/archives/*
+    echo "deb [trusted=yes] http://192.168.118.129:8080 stable non-free" > /etc/apt/sources.list.d/cutefish.list
+    apt clean
+    apt update
+
+    apt install -y --no-install-recommends appmotor
+    apt install -y --no-install-recommends cutefish-calculator
+    apt install -y --no-install-recommends cutefish-calamares
+    apt install -y --no-install-recommends cutefish-core
+    apt install -y --no-install-recommends cutefish-cursor-themes
+    apt install -y --no-install-recommends cutefish-daemon
+    apt install -y --no-install-recommends cutefish-debinstaller
+    apt install -y --no-install-recommends cutefish-dock
+    apt install -y --no-install-recommends cutefish-filemanager
+    apt install -y --no-install-recommends cutefish-gtk-themes
+    apt install -y --no-install-recommends cutefish-icons
+    apt install -y --no-install-recommends cutefish-kwin-plugins
+    apt install -y --no-install-recommends cutefish-launcher
+    apt install -y --no-install-recommends cutefish-plymouth-theme
+    apt install -y --no-install-recommends cutefish-qt-plugins
+    apt install -y --no-install-recommends cutefish-screenlocker
+    apt install -y --no-install-recommends cutefish-screenshot
+    apt install -y --no-install-recommends cutefish-sddm-theme
+    apt install -y --no-install-recommends cutefish-settings
+    apt install -y --no-install-recommends cutefish-statusbar
+    apt install -y --no-install-recommends cutefish-terminal
+    apt install -y --no-install-recommends cutefish-updator
+    apt install -y --no-install-recommends cutefish-videoplayer
+    apt install -y --no-install-recommends cutefish-wallpapers
+    apt install -y --no-install-recommends fishui
+    apt install -y --no-install-recommends libcutefish
+    apt install -y --no-install-recommends texteditor
+    apt install -y --no-install-recommends yoyo-fantacy
 EOF
-rm -rf ${DEBIAN_LIVE_CHROOT}/package
+cd ${BUILD_OLD_DIR}
 
 cp ${BUILD_SCRIPT}/user/myuser ${DEBIAN_LIVE_CHROOT}/usr/bin
 cp ${BUILD_SCRIPT}/live/cutefish_installer ${DEBIAN_LIVE_CHROOT}/usr/bin
@@ -95,9 +151,14 @@ sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
     echo "cutefish-live ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
     echo "export PATH=/usr/sbin:\$PATH" >> /home/cutefish-live/user/.bashrc
     cat /home/cutefish-live/user/.bashrc
+
+    echo "127.0.0.1   cutefish-live" >> /etc/hosts
 EOF
 
+
+umount ${DEBIAN_LIVE_CHROOT}/dev/pts
 umount ${DEBIAN_LIVE_CHROOT}/dev
 umount ${DEBIAN_LIVE_CHROOT}/proc
 umount ${DEBIAN_LIVE_CHROOT}/sys
+umount ${DEBIAN_LIVE_CHROOT}/run
 

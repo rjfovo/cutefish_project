@@ -23,6 +23,19 @@ function help()
 
 function clean()
 {
+    umount ${DEBIAN_LIVE_CHROOT}/dev/pts
+    umount ${DEBIAN_LIVE_CHROOT}/dev
+    umount ${DEBIAN_LIVE_CHROOT}/proc
+    umount ${DEBIAN_LIVE_CHROOT}/sys
+    umount ${DEBIAN_LIVE_CHROOT}/run
+
+
+    umount ${DEBIAN_INSTALL_CHROOT}/dev/pts
+    umount ${DEBIAN_INSTALL_CHROOT}/dev
+    umount ${DEBIAN_INSTALL_CHROOT}/proc
+    umount ${DEBIAN_INSTALL_CHROOT}/sys
+    umount ${DEBIAN_INSTALL_CHROOT}/run
+
     echo "$LIVE_BOOT 已经目录存在，正在删除..."
     rm -rf $LIVE_BOOT/../LIVE_BOOT/*
     echo "目录已删除"

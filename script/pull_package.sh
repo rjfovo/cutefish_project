@@ -7,7 +7,7 @@ if [ ! -d ${CUTEFISH_PACKAGE_PATH} ]; then
 fi
 
 
-scp root@192.168.36.129:/workspace/cutefish_project/build_iso/package/cutefish/*.deb ${CUTEFISH_PACKAGE_PATH}
+scp root@192.168.118.131:/workspace/cutefish_project/build_iso/package/cutefish/*.deb ${CUTEFISH_PACKAGE_PATH}
 
 
 exit

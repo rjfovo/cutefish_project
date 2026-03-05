@@ -26,61 +26,94 @@ else
 fi
 
 mount --bind /dev ${DEBIAN_INSTALL_CHROOT}/dev
+mount --bind /dev/pts ${DEBIAN_INSTALL_CHROOT}/dev/pts
 mount -t proc proc ${DEBIAN_INSTALL_CHROOT}/proc
 mount -t sysfs sysfs ${DEBIAN_INSTALL_CHROOT}/sys
+mount --bind /run ${DEBIAN_INSTALL_CHROOT}/run
 
-echo "cutefish-live" | sudo tee "${DEBIAN_INSTALL_CHROOT}/etc/hostname"
 # 配置live环境
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
 apt-get update && \
 apt-get install -y --no-install-recommends \
     linux-image-amd64 \
-    systemd-sysv \
     live-boot \
+    systemd-sysv \
     sudo \
     iproute2 \
     dbus \
     network-manager \
     vim \
-    grub2
+    grub2 \
+    python3 \
+    dialog \
+    locales \
+    ssh
 EOF
 
+# 配置字体
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
 apt-get install -y --no-install-recommends \
-    xserver-xorg-core xserver-xorg xinit
+    xfonts-utils \
+    fontconfig \
+    fonts-noto-cjk
+EOF
+
+# 配置显示相关软件包
+sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
+apt-get install -y --no-install-recommends \
+    xserver-xorg-core xserver-xorg xinit xterm 
 EOF
 
 # # 安装cutefish安装器
-pwd
-mkdir ${DEBIAN_INSTALL_CHROOT}/package
-cp ${BUILD_PACKAGE}/cutefish/*.deb ${DEBIAN_INSTALL_CHROOT}/package/
-rm -f ${DEBIAN_INSTALL_CHROOT}/package/cutefish-calamares_0.5_amd64.deb # 安装的系统不需要calamare包
+BUILD_OLD_DIR=`pwd`
+# 在build系统中构建cutefish apt 软件包
+./build_apt.sh --rebuild
+
+# 启动http服务用于软件包访问
+killall -9 python3
+cd ${CUTEFISH_APT_DIR}
+python3 -m http.server 8080 &
+sleep 10 # 等待http服务启动
 
 # 安装所有cutefish软件
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
-    cd /package
-    dpkg -i *.deb
-    rm -f /var/cache/apt/archives/*
-    apt --fix-broken -d install -y
-    cd /var/cache/apt/archives/
-    dpkg -i --force-overwrite *.deb
-    apt --fix-broken install -y
-    cd /package
-    dpkg -i --force-overwrite *.deb
-    apt remove kdeconnect -y
-    apt remove zutty -y 
-    apt remove plasma-discover -y
-    apt remove systemsettings -y
-    apt remove plasma-systemmonitor -y
-    apt remove partitionmanager -y
-    apt remove kwalletmanager -y
-    apt remove plasma-workspace -y
-    
-    apt autoremove -y
-    rm -f /var/cache/apt/archives/*
-EOF
-rm -rf ${DEBIAN_INSTALL_CHROOT}/package
+    echo "deb [trusted=yes] http://192.168.118.129:8080 stable non-free" > /etc/apt/sources.list.d/cutefish.list
+    apt clean
+    apt update
 
+    apt install -y --no-install-recommends appmotor
+    apt install -y --no-install-recommends cutefish-calculator
+    apt install -y --no-install-recommends cutefish-calamares
+    apt install -y --no-install-recommends cutefish-core
+    apt install -y --no-install-recommends cutefish-cursor-themes
+    apt install -y --no-install-recommends cutefish-daemon
+    apt install -y --no-install-recommends cutefish-debinstaller
+    apt install -y --no-install-recommends cutefish-dock
+    apt install -y --no-install-recommends cutefish-filemanager
+    apt install -y --no-install-recommends cutefish-gtk-themes
+    apt install -y --no-install-recommends cutefish-icons
+    apt install -y --no-install-recommends cutefish-kwin-plugins
+    apt install -y --no-install-recommends cutefish-launcher
+    apt install -y --no-install-recommends cutefish-plymouth-theme
+    apt install -y --no-install-recommends cutefish-qt-plugins
+    apt install -y --no-install-recommends cutefish-screenlocker
+    apt install -y --no-install-recommends cutefish-screenshot
+    apt install -y --no-install-recommends cutefish-sddm-theme
+    apt install -y --no-install-recommends cutefish-settings
+    apt install -y --no-install-recommends cutefish-statusbar
+    apt install -y --no-install-recommends cutefish-terminal
+    apt install -y --no-install-recommends cutefish-updator
+    apt install -y --no-install-recommends cutefish-videoplayer
+    apt install -y --no-install-recommends cutefish-wallpapers
+    apt install -y --no-install-recommends fishui
+    apt install -y --no-install-recommends libcutefish
+    apt install -y --no-install-recommends texteditor
+    apt install -y --no-install-recommends yoyo-fantacy
+EOF
+cd ${BUILD_OLD_DIR}
+
+umount ${DEBIAN_INSTALL_CHROOT}/dev/pts
 umount ${DEBIAN_INSTALL_CHROOT}/dev
 umount ${DEBIAN_INSTALL_CHROOT}/proc
 umount ${DEBIAN_INSTALL_CHROOT}/sys
+umount ${DEBIAN_INSTALL_CHROOT}/run
