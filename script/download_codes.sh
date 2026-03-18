@@ -10,34 +10,35 @@ cd ${code_path}
 
 cutefish_url=git@github.com:rjfovo
 git_repos=(
-	core
-	launcher
-	dock
-	statusbar
-	screenlocker
-	daemon
-	libcutefish
-	settings
-	updator
-	fishui
-	kwin-plugins
-	sddm-theme
-	appmotor
-	qt-plugins
-	icons
-	gtk-themes
-	cursor-themes
-	filemanager
-	debinstaller
-	texteditor
-	terminal
-	screenshot
-	calculator
-	videoplayer
+	# core
+	# launcher
+	# dock
+	# statusbar
+	# screenlocker
+	# daemon
+	# libcutefish
+	# settings
+	# updator
+	# fishui
+	# kwin-plugins
+	# sddm-theme
+	# appmotor
+	# qt-plugins
+	# icons
+	# gtk-themes
+	# cursor-themes
+	# filemanager
+	# debinstaller
+	# texteditor
+	# terminal
+	# screenshot
+	# calculator
+	# videoplayer
+	# calamares
+	# plymouth-theme
+	# wallpapers
+	# fantascene-dynamic-wallpaper
 	calamares
-	plymouth-theme
-	wallpapers
-	fantascene-dynamic-wallpaper
 )
 
 repo_len=${#git_repos[@]}

@@ -1,0 +1,80 @@
+工作目标：构建一个可安装iso
+1. 使用cutefish的calamares配置改造我的calamares
+2. 构建live-cd 
+
+2024-11-11： 
+在livecd中只安装calamares
+
+dpkg -i cutefish-calamares_0.5_amd64.deb
+apt --fix-broken install
+
+apt install locales		# 语言设置
+apt install dialog		# 终端界面显示
+dpkg-reconfigure locales # 配置语言
+
+apt-get install xfonts-intl-chinese  安装中文字体
+apt-get install ttf-wqy-microhei
+
+apt-get install fonts-dejavu-extra
+apt-get install fonts-freefont-ttf
+apt-get install fonts-liberation
+apt-get install fonts-unifont
+
+# 分区无法探测
+
+
+
+工作日志记录：
+1. 构建的iso，用root用户运行startx能直接运行桌面
+    问题在于，livecd怎么开机通过startx启动桌面
+
+2024-11-27:
+    todo： 打包镜像测试改动能否自动登录桌面
+
+2024-11-27：
+    todo: 实现calamares将程序安装到磁盘上
+    重新构建live系统需要修复开机启动桌面然后运行安装程序
+    问题：现在启动写在终端脚本中，每运行一次终端就会启动一次，需要优化
+
+2024-12-01:
+    todo:还是优先查sddm为啥登录成功后黑屏吧
+    发现：用cutefish桌面创建的用户能启动桌面，用命令创建的用户缺乏一些配置无法启动
+
+2024-12-04:
+    cutefish_installer没有权限执行命令
+
+2024-12-05:
+    todo: 实现calamares将程序安装到磁盘上
+
+2024-12-11:
+    目前实现将系统安装到磁盘上了
+    todo:虽然系统安装到磁盘上了，但是系统是live系统，需要构建一个用户使用的系统
+
+2024-12-11:
+    done: 调整build_iso脚本，创建安装用的filesystem
+
+2024-12-18:
+    done：完成安装iso
+    todo: 测试iso基本功能，计划下一步工作
+
+2024-12-19:
+    目前系统安装基本流程已经打通，下一步工作,MyOS-2025计划。
+    1. 搭建一个系统的文档网站
+    2. 开发软件管理程序:
+        1. 支持deb,appimage两种格式
+        2. 对debian所有软件包实现可控。
+    3. 开发系统任务管理器：
+        1. cpu,内存,磁盘,网络,gpu实现监控。
+        2. 对进程实现监控，对进程使用的系统资源进行监控(cpu,内存,磁盘,网络,gpu,线程)。
+        3. 应用程序开机启动。
+        4. 用户管理。
+        5. systemd管理的服务实现监控
+    4. 硬件管理器:
+        管理系统的所接入的硬件
+    5. bug修复和系统调优
+
+2024-12-22:
+    done: 文档网站将采用sphinx，目前搭建网站还不是最重要的，重要的还是中间积累文档
+            之后的目标还是边开发维护，边写文档，文档项目在docs项目。
+    todo: 为了MyOS-2025计划，要开发一个基础库用于支持计划中的2,3,4选项。将来开发界面
+          的时候可以可以直接调用接口来使用

@@ -1,5 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file alias="/cutefish/statusbar">cutefish/statusbar</file>
-  </qresource>
-</RCC>
