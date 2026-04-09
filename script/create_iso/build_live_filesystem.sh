@@ -30,7 +30,7 @@ mount -t proc proc ${DEBIAN_LIVE_CHROOT}/proc
 mount -t sysfs sysfs ${DEBIAN_LIVE_CHROOT}/sys
 mount --bind /run ${DEBIAN_LIVE_CHROOT}/run
 
-cp /etc/resolv.conf /mnt/etc/resolv.conf
+cp /etc/resolv.conf ${DEBIAN_LIVE_CHROOT}/etc/resolv.conf
 
 echo "cutefish-live" | sudo tee "${DEBIAN_LIVE_CHROOT}/etc/hostname"
 # 配置live环境
@@ -48,13 +48,13 @@ apt-get install -y --no-install-recommends \
     vim \
     squashfs-tools \
     grub2 \
+    grub-efi-amd64-bin \
+    grub-efi-ia32-bin \
     python3 \
     dialog \
     locales \
-    ssh
-
-    apt install tasksel -y
-    tasksel install standard
+    ssh \
+    rsync 
 EOF
 
 # 配置字体
@@ -64,14 +64,15 @@ sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
         fontconfig \
         fonts-noto-cjk
 
-    apt install  -y --no-install-recommends  locales locales-all \
+    apt install  -y --no-install-recommends \
+            locales locales-all \
             fontconfig \
             fonts-dejavu-core \
             fonts-noto-core \
             fonts-noto-cjk \
             fonts-noto-color-emoji
 
-    apt install fonts-wqy-zenhei
+    apt install -y fonts-wqy-zenhei
     fc-cache -fv
 
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
@@ -84,8 +85,21 @@ EOF
 
 # 配置显示相关软件包
 sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
-apt-get install -y --no-install-recommends \
-    xserver-xorg-core xserver-xorg xinit xterm 
+    apt-get install -y --no-install-recommends\
+        xserver-xorg-core xserver-xorg xinit xterm 
+EOF
+
+# 配置pokit相关软件包
+sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
+    apt-get install -y --no-install-recommends\
+        polkitd pkexec
+EOF
+
+# 创建文件系统需要的软件包
+sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
+    apt-get install -y --no-install-recommends\
+        dosfstools \
+        e2fsprogs
 EOF
 
 # # 安装cutefish安装器
@@ -134,6 +148,7 @@ sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
     apt install -y --no-install-recommends texteditor
     apt install -y --no-install-recommends yoyo-fantacy
 EOF
+
 cd ${BUILD_OLD_DIR}
 
 cp ${BUILD_SCRIPT}/user/myuser ${DEBIAN_LIVE_CHROOT}/usr/bin
@@ -141,6 +156,8 @@ cp ${BUILD_SCRIPT}/live/cutefish_installer ${DEBIAN_LIVE_CHROOT}/usr/bin
 
 cp ${BUILD_CONFIG}/sddm_autologin.conf ${DEBIAN_LIVE_CHROOT}/etc/sddm.conf.d/autologin.conf      # sddm用户自动登录
 cp ${BUILD_CONFIG}/cutefish-installer.desktop ${DEBIAN_LIVE_CHROOT}/etc/xdg/autostart            # 添加进入桌面后自动启动程序
+# 修改配置文件，不然calamares执行分区时会卡死，这里进行特殊处理
+cp -f ${BUILD_CONFIG}/org.kde.kpmcore.helperinterface.conf ${DEBIAN_LIVE_CHROOT}/usr/share/dbus-1/system.d/org.kde.kpmcore.helperinterface.conf
 
 # 创建live用户以及设置免密登录
 sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
@@ -149,6 +166,8 @@ sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
 
     myuser --add cutefish-live cutefish
     echo "cutefish-live ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    usermod -aG sudo cutefish-live
+
     echo "export PATH=/usr/sbin:\$PATH" >> /home/cutefish-live/user/.bashrc
     cat /home/cutefish-live/user/.bashrc
 

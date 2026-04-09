@@ -31,23 +31,27 @@ mount -t proc proc ${DEBIAN_INSTALL_CHROOT}/proc
 mount -t sysfs sysfs ${DEBIAN_INSTALL_CHROOT}/sys
 mount --bind /run ${DEBIAN_INSTALL_CHROOT}/run
 
+cp /etc/resolv.conf ${DEBIAN_INSTALL_CHROOT}/etc/resolv.conf
+
 # 配置live环境
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
-apt-get update && \
-apt-get install -y --no-install-recommends \
-    linux-image-amd64 \
-    live-boot \
-    systemd-sysv \
-    sudo \
-    iproute2 \
-    dbus \
-    network-manager \
-    vim \
-    grub2 \
-    python3 \
-    dialog \
-    locales \
-    ssh
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        linux-image-amd64 \
+        live-boot \
+        systemd-sysv \
+        sudo \
+        iproute2 \
+        dbus \
+        network-manager \
+        vim \
+        grub2 \
+        grub-efi-amd64-bin \
+        grub-efi-ia32-bin \
+        python3 \
+        dialog \
+        locales \
+        ssh
 EOF
 
 # 配置字体
@@ -62,6 +66,19 @@ EOF
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
 apt-get install -y --no-install-recommends \
     xserver-xorg-core xserver-xorg xinit xterm 
+EOF
+
+# 配置pokit相关软件包
+sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
+apt-get install -y --no-install-recommends \
+    polkitd pkexec
+EOF
+
+# 创建文件系统需要的软件包
+sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
+apt-get install -y --no-install-recommends \
+    dosfstools \
+    e2fsprogs
 EOF
 
 # # 安装cutefish安装器
@@ -110,7 +127,9 @@ sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
     apt install -y --no-install-recommends texteditor
     apt install -y --no-install-recommends yoyo-fantacy
 EOF
+
 cd ${BUILD_OLD_DIR}
+cp -f ${BUILD_CONFIG}/org.kde.kpmcore.helperinterface.conf ${DEBIAN_INSTALL_CHROOT}/usr/share/dbus-1/system.d/org.kde.kpmcore.helperinterface.conf
 
 umount ${DEBIAN_INSTALL_CHROOT}/dev/pts
 umount ${DEBIAN_INSTALL_CHROOT}/dev
