@@ -70,6 +70,9 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
-    }
+        "variant": "cpp",
+        "kx11extras": "cpp"
+    },
+    "cmake.sourceDirectory": "/workspace/cutefish_project/tmp/calamares.backup",
+    "git.ignoreLimitWarning": true
 }
