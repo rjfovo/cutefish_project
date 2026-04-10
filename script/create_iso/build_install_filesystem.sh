@@ -35,50 +35,72 @@ cp /etc/resolv.conf ${DEBIAN_INSTALL_CHROOT}/etc/resolv.conf
 
 # 配置live环境
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        linux-image-amd64 \
-        live-boot \
-        systemd-sysv \
-        sudo \
-        iproute2 \
-        dbus \
-        network-manager \
-        vim \
-        grub2 \
-        grub-efi-amd64-bin \
-        grub-efi-ia32-bin \
-        python3 \
-        dialog \
-        locales \
-        ssh
+apt-get update 
+
+apt-get install -y --no-install-recommends \
+    linux-image-amd64 \
+    live-boot \
+    systemd-sysv \
+    sudo \
+    iproute2 \
+    dbus \
+    network-manager \
+    vim \
+    grub2 \
+    grub-efi-amd64 \
+    grub-efi-amd64-bin \
+    grub-efi-amd64-signed \
+    grub-efi-ia32-bin \
+    python3 \
+    dialog \
+    locales \
+    ssh \
+    rsync 
 EOF
 
 # 配置字体
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
-apt-get install -y --no-install-recommends \
-    xfonts-utils \
-    fontconfig \
-    fonts-noto-cjk
+    apt-get install -y --no-install-recommends \
+        xfonts-utils \
+        fontconfig \
+        fonts-noto-cjk
+
+    apt install  -y --no-install-recommends \
+            locales locales-all \
+            fontconfig \
+            fonts-dejavu-core \
+            fonts-noto-core \
+            fonts-noto-cjk \
+            fonts-noto-color-emoji
+
+    apt install -y fonts-wqy-zenhei
+    fc-cache -fv
+
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+    echo 'LANG=en_US.UTF-8' > /etc/environment
+
+    locale
+    locale -a
+    fc-list | head
 EOF
 
 # 配置显示相关软件包
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
-apt-get install -y --no-install-recommends \
-    xserver-xorg-core xserver-xorg xinit xterm 
+    apt-get install -y --no-install-recommends\
+        xserver-xorg-core xserver-xorg xinit xterm 
 EOF
 
 # 配置pokit相关软件包
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
-apt-get install -y --no-install-recommends \
-    polkitd pkexec
+    apt-get install -y --no-install-recommends\
+        polkitd pkexec
 EOF
 
 # 创建文件系统需要的软件包
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
-apt-get install -y --no-install-recommends \
-    dosfstools \
-    e2fsprogs
+    apt-get install -y --no-install-recommends\
+        dosfstools \
+        e2fsprogs
 EOF
 
 # # 安装cutefish安装器
@@ -100,7 +122,6 @@ sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
 
     apt install -y --no-install-recommends appmotor
     apt install -y --no-install-recommends cutefish-calculator
-    apt install -y --no-install-recommends cutefish-calamares
     apt install -y --no-install-recommends cutefish-core
     apt install -y --no-install-recommends cutefish-cursor-themes
     apt install -y --no-install-recommends cutefish-daemon

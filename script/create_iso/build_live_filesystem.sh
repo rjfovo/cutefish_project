@@ -48,7 +48,9 @@ apt-get install -y --no-install-recommends \
     vim \
     squashfs-tools \
     grub2 \
+    grub-efi-amd64 \
     grub-efi-amd64-bin \
+    grub-efi-amd64-signed \
     grub-efi-ia32-bin \
     python3 \
     dialog \
