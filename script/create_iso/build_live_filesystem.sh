@@ -35,28 +35,35 @@ cp /etc/resolv.conf ${DEBIAN_LIVE_CHROOT}/etc/resolv.conf
 echo "cutefish-live" | sudo tee "${DEBIAN_LIVE_CHROOT}/etc/hostname"
 # 配置live环境
 sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
-apt-get update 
+    apt-get update 
 
-apt-get install -y --no-install-recommends \
-    linux-image-amd64 \
-    live-boot \
-    systemd-sysv \
-    sudo \
-    iproute2 \
-    dbus \
-    network-manager \
-    vim \
-    squashfs-tools \
-    grub2 \
-    grub-efi-amd64 \
-    grub-efi-amd64-bin \
-    grub-efi-amd64-signed \
-    grub-efi-ia32-bin \
-    python3 \
-    dialog \
-    locales \
-    ssh \
-    rsync 
+    # 移除可能存在的 grub-pc 以避免与 grub-efi-amd64 冲突
+    apt-get remove -y --purge grub-pc 2>/dev/null || true
+    # 也移除 grub2 虚拟包，因为它依赖 grub-pc
+    apt-get remove -y --purge grub2 2>/dev/null || true
+
+    apt-get install -y --no-install-recommends \
+        linux-image-amd64 \
+        live-boot \
+        systemd-sysv \
+        sudo \
+        iproute2 \
+        dbus \
+        network-manager \
+        vim \
+        squashfs-tools \
+        grub-common \
+        grub2-common \
+        grub-efi-amd64 \
+        grub-efi-amd64-bin \
+        grub-efi-amd64-signed \
+        grub-efi-ia32-bin \
+        grub-pc-bin \
+        python3 \
+        dialog \
+        locales \
+        ssh \
+        rsync 
 EOF
 
 # 配置字体
