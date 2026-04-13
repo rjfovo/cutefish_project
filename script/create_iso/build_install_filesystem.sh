@@ -37,11 +37,11 @@ cp /etc/resolv.conf ${DEBIAN_INSTALL_CHROOT}/etc/resolv.conf
 sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
     apt-get update 
 
-    # 移除可能存在的 grub-pc 以避免与 grub-efi-amd64 冲突
-    apt-get remove -y --purge grub-pc 2>/dev/null || true
-    # 也移除 grub2 虚拟包，因为它依赖 grub-pc
-    apt-get remove -y --purge grub2 2>/dev/null || true
-
+    # 完全移除所有grub包，然后重新安装EFI版本
+    apt-get remove -y --purge grub-* 2>/dev/null || true
+    apt-get autoremove -y
+    
+    # 安装必要的grub包，包括efibootmgr用于EFI系统
     apt-get install -y --no-install-recommends \
         linux-image-amd64 \
         live-boot \
@@ -56,13 +56,18 @@ sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
         grub-efi-amd64 \
         grub-efi-amd64-bin \
         grub-efi-amd64-signed \
-        grub-efi-ia32-bin \
-        grub-pc-bin \
+        efibootmgr \
         python3 \
         dialog \
         locales \
         ssh \
         rsync 
+    
+    # 验证grub-efi安装
+    echo "检查grub-efi安装状态:"
+    dpkg -l | grep grub
+    echo "检查/usr/lib/grub目录:"
+    ls -la /usr/lib/grub/
 EOF
 
 # 配置字体
