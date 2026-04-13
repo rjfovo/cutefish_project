@@ -9,4 +9,7 @@ fi
 rm -f ${CUTEFISH_PACKAGE_PATH}/*.deb
 cp -f ${CURR_PATH}/../cutefish/output/debs/* ${CUTEFISH_PACKAGE_PATH}
 
+# 移除不用的包
+rm -f ${CUTEFISH_PACKAGE_PATH}/*build-deps*.deb
+
 exit 0

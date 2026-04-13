@@ -38,7 +38,8 @@ git_repos=(
 	# plymouth-theme
 	# wallpapers
 	# fantascene-dynamic-wallpaper
-	calamares
+	# calamares
+	calamares-settings
 )
 
 repo_len=${#git_repos[@]}

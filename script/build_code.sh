@@ -38,6 +38,7 @@ git_repos=(
 	calculator
 	videoplayer
 	calamares
+	calamares-settings
 	plymouth-theme
 	wallpapers
     fantascene-dynamic-wallpaper

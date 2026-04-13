@@ -85,3 +85,6 @@
 [submodule "cutefish/code/myos_base"]
 	path = cutefish/code/myos_base
 	url = git@github.com:rjfovo/myos_base.git
+[submodule "cutefish/code/calamares-settings"]
+	path = cutefish/code/calamares-settings
+	url = git@github.com:rjfovo/calamares-settings.git
