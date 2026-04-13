@@ -136,6 +136,7 @@ sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
     apt install -y --no-install-recommends appmotor
     apt install -y --no-install-recommends cutefish-calculator
     apt install -y --no-install-recommends cutefish-calamares
+    apt install -y --no-install-recommends cutefish-calamares-settings
     apt install -y --no-install-recommends cutefish-core
     apt install -y --no-install-recommends cutefish-cursor-themes
     apt install -y --no-install-recommends cutefish-daemon
