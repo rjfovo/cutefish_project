@@ -44,7 +44,6 @@ sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
     # 安装必要的grub包，包括efibootmgr用于EFI系统
     apt-get install -y --no-install-recommends \
         linux-image-amd64 \
-        live-boot \
         systemd-sysv \
         sudo \
         iproute2 \
