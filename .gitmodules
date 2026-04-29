@@ -88,3 +88,6 @@
 [submodule "cutefish/code/calamares-settings"]
 	path = cutefish/code/calamares-settings
 	url = git@github.com:rjfovo/calamares-settings.git
+[submodule "cutefish/code/desktop-background"]
+	path = cutefish/code/desktop-background
+	url = git@github.com:rjfovo/desktop-background.git

@@ -37,6 +37,7 @@ git_repos=(
 	screenshot
 	calculator
 	videoplayer
+	desktop-background
 	calamares
 	calamares-settings
 	plymouth-theme
