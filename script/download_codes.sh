@@ -1,12 +1,12 @@
 #!/bin/bash
 
 script_path=`pwd`
-code_path=${script_path}/../cutefish/code
+proj_path=${script_path}/..
+code_path=cutefish/code
 
-if [ ! -d ${code_path} ];then
-	mkdir -p ${code_path}
+if [ ! -d ${proj_path}/${code_path} ];then
+	mkdir -p ${proj_path}/${code_path}
 fi
-cd ${code_path}
 
 cutefish_url=git@github.com:rjfovo
 git_repos=(
@@ -39,18 +39,40 @@ git_repos=(
 	# wallpapers
 	# fantascene-dynamic-wallpaper
 	# calamares
-	calamares-settings
+	# calamares-settings
 )
 
 repo_len=${#git_repos[@]}
 for (( i = 0; i  < ${repo_len}; i++ )); do
-	if [ -d ${git_repos[i]} ];then
+	if [ -d ${proj_path}/${code_path}/${git_repos[i]} ];then
 		echo "${git_repos[i]} is exists"
 		continue
 	fi
-	echo "${git_repos[i]} not exists, cloning..."
-	git clone ${cutefish_url}/${git_repos[i]}.git
+	echo "${git_repos[i]} not exists, cloning and adding submodule..."
+	cd ${proj_path}
 	git submodule add ${cutefish_url}/${git_repos[i]}.git ${code_path}/${git_repos[i]}
+done
+
+app_path=app
+if [ ! -d ${proj_path}/${app_path} ];then
+	mkdir -p ${proj_path}/${app_path}
+fi
+
+app_repos=(
+	apppack
+	appstore
+	appstore-client
+)
+
+repo_len=${#app_repos[@]}
+for (( i = 0; i  < ${repo_len}; i++ )); do
+	if [ -d ${proj_path}/${app_path}/${app_repos[i]} ];then
+		echo "${app_repos[i]} is exists"
+		continue
+	fi
+	echo "${app_repos[i]} not exists, cloning and adding submodule..."
+	cd ${proj_path}
+	git submodule add ${cutefish_url}/${app_repos[i]}.git  ${app_path}/${app_repos[i]}
 done
 
 exit 0
