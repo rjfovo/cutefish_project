@@ -91,3 +91,12 @@
 [submodule "cutefish/code/desktop-background"]
 	path = cutefish/code/desktop-background
 	url = git@github.com:rjfovo/desktop-background.git
+[submodule "app/apppack"]
+	path = app/apppack
+	url = git@github.com:rjfovo/apppack.git
+[submodule "app/appstore"]
+	path = app/appstore
+	url = git@github.com:rjfovo/appstore.git
+[submodule "app/appstore-client"]
+	path = app/appstore-client
+	url = git@github.com:rjfovo/appstore-client.git
