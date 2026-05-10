@@ -100,3 +100,6 @@
 [submodule "app/appstore-client"]
 	path = app/appstore-client
 	url = git@github.com:rjfovo/appstore-client.git
+[submodule "app/taskmanager"]
+	path = app/taskmanager
+	url = git@github.com:rjfovo/taskmanager.git
