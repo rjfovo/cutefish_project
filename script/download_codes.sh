@@ -59,9 +59,10 @@ if [ ! -d ${proj_path}/${app_path} ];then
 fi
 
 app_repos=(
-	apppack
-	appstore
-	appstore-client
+	#apppack
+	#appstore
+	#appstore-client
+	taskmanager
 )
 
 repo_len=${#app_repos[@]}
