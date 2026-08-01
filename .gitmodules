@@ -103,3 +103,6 @@
 [submodule "app/taskmanager"]
 	path = app/taskmanager
 	url = git@github.com:rjfovo/taskmanager.git
+[submodule "app/devicemanager"]
+	path = app/devicemanager
+	url = git@github.com:rjfovo/devicemanager.git
