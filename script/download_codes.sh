@@ -62,7 +62,8 @@ app_repos=(
 	#apppack
 	#appstore
 	#appstore-client
-	taskmanager
+	#taskmanager
+	devicemanager
 )
 
 repo_len=${#app_repos[@]}
