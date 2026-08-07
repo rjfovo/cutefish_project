@@ -40,6 +40,8 @@ git_repos=(
 	# fantascene-dynamic-wallpaper
 	# calamares
 	# calamares-settings
+	filemodel
+	desktop
 )
 
 repo_len=${#git_repos[@]}

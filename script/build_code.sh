@@ -31,6 +31,8 @@ git_repos=(
 	gtk-themes
 	cursor-themes
 	filemanager
+	filemodel
+	desktop
 	debinstaller
 	texteditor
 	terminal
@@ -130,7 +132,9 @@ function clean() {
 
             if [ -d ${code_path} ];then
                 cd ${code_path}
-                debuild -- clean
+                # debuild 是交互式工具，清理时遇到冲突会弹 "continue anyway? (y/n)" 卡住脚本。
+                # 直接执行 debian/rules 的 clean target（非交互），效果相同。
+                fakeroot debian/rules clean
             else 
                 echo "Not found ${git_repos[i]}"
             fi
@@ -142,7 +146,7 @@ function clean() {
         cd ${code_path}
         if [ -d ${code_path} ];then
             cd ${code_path}
-            debuild -- clean
+            fakeroot debian/rules clean
         else 
             echo "Not found $1"
         fi
