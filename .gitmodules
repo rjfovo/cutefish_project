@@ -106,3 +106,9 @@
 [submodule "app/devicemanager"]
 	path = app/devicemanager
 	url = git@github.com:rjfovo/devicemanager.git
+[submodule "cutefish/code/filemodel"]
+	path = cutefish/code/filemodel
+	url = git@github.com:rjfovo/filemodel.git
+[submodule "cutefish/code/desktop"]
+	path = cutefish/code/desktop
+	url = git@github.com:rjfovo/desktop.git
