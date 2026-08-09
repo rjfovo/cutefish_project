@@ -112,3 +112,6 @@
 [submodule "cutefish/code/desktop"]
 	path = cutefish/code/desktop
 	url = git@github.com:rjfovo/desktop.git
+[submodule "cutefish/code/fantascene-dynamic-wallpaper"]
+	path = cutefish/code/fantascene-dynamic-wallpaper
+	url = git@github.com:rjfovo/fantascene-dynamic-wallpaper.git

@@ -74,5 +74,12 @@
         "kx11extras": "cpp"
     },
     "cmake.sourceDirectory": "/workspace/cutefish_project/tmp/calamares.backup",
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "files.watcherExclude": {
+        "**/build/**": true,
+        "**/output/**": true,
+        "**/.git/**": true,
+        "**/node_modules/**": true,
+        "**/tmp/**": true
+    }
 }
