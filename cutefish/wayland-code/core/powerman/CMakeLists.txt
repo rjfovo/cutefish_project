@@ -1,0 +1,37 @@
+project(cutefish-powerman LANGUAGES CXX)
+set(TARGET cutefish-powerman)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Quick DBus)
+find_package(KF6IdleTime REQUIRED)
+
+set(SOURCES
+    main.cpp
+    application.cpp
+    lidwatcher.cpp
+    action.cpp
+    idlemanager.cpp
+    dimdisplayaction.cpp
+    cpu/cpuitem.cpp
+    cpu/cpumanagement.cpp
+)
+
+qt6_add_dbus_adaptor(DBUS_SOURCES
+                     cpu/com.cutefish.CPUManagement.xml
+                     cpu/cpumanagement.h CPUManagement)
+qt6_add_dbus_adaptor(DBUS_SOURCES
+                     com.cutefish.PowerManager.xml
+                     application.h Application)
+qt_add_dbus_interface(DBUS_SOURCES org.freedesktop.ScreenSaver.xml screenlocker_interface)
+set_source_files_properties(${DBUS_SOURCES} PROPERTIES SKIP_AUTOGEN ON)
+
+add_executable(${TARGET} ${SOURCES} ${DBUS_SOURCES})
+target_link_libraries(${TARGET}
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Quick
+        Qt6::DBus
+        KF6::IdleTime
+)
+
+install(TARGETS ${TARGET} RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

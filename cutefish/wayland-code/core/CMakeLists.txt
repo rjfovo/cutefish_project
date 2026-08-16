@@ -15,6 +15,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Core Gui Widgets Quick QuickControls2 DBus Xml LinguistTools)
 find_package(PkgConfig REQUIRED)
 find_package(PolkitQt6-1 REQUIRED)
+find_package(KF6IdleTime REQUIRED)
 
 # Wayland-only build boundary. Legacy display-server components from the
 # frozen audit source are intentionally absent from this migration copy.
@@ -22,6 +23,10 @@ find_package(PolkitQt6-1 REQUIRED)
 # excluded per the migration plan.
 
 add_subdirectory(clipboard)
+add_subdirectory(notificationd)
+add_subdirectory(powerman)
+add_subdirectory(session)
+add_subdirectory(settings-daemon)
 add_subdirectory(cpufreq)
 add_subdirectory(polkit-agent)
 add_subdirectory(screen-brightness)

@@ -7,7 +7,8 @@ Build-Depends: cmake,
                pkg-config,
                qt6-base-dev,
                qt6-declarative-dev,
-               libpolkit-qt6-1-dev
+               libpolkit-qt6-1-dev,
+               libkf6idletime-dev
 Standards-Version: 4.5.0
 Homepage: https://github.com/cutefishos/core
 
