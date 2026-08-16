@@ -1,6 +1,6 @@
 # stage-0 任务：cutefish-shell 工程骨架
 
-- 状态：进行中
+- 状态：验收通过（工程骨架范围）
 - 方案依据：`stage-0` + `cutefish-dedicated-compositor-architecture.md`
 
 ## 实际修改
@@ -29,4 +29,4 @@ XDG_RUNTIME_DIR=<tmp> WAYLAND_DISPLAY=<apps-socket> QT_QPA_PLATFORM=wayland \
 
 ## 验收状态
 
-- 本任务项：验收通过（工程骨架范围）。
+- stage-0 工程骨架：验收通过。

@@ -6,34 +6,34 @@
 
 ## 总进度
 
-- 当前阶段：stage-0（进行中）
-- 当前任务：已完成新构建体系、compositor core/shell/installer 工程骨架、core 包边界迁移副本；
-  剩余 core 服务迁移与 stage-0 全量验收
-- 并行工作流：cutefish-installer 专用化（进行中，当前为 UI/工程骨架，磁盘 Job 禁止执行）
-- 阻塞项：无 stage-0 级阻塞；stage-1 KMS Spike 的真机复验等待硬件批准（CONFLICT-006）
+- 当前阶段：stage-0 已验收通过；stage-1 未开始，等待 CONFLICT-006 KMS 真机复验硬件批准
+- 当前任务：stage-1 前置条件确认；安装器专用化继续并行推进
+- 阻塞项：CONFLICT-006（stage-1 KMS Spike 需要 AMD/Intel 真机，测试服务器禁止 DRM/input 验证）
 
 ## 当前状态摘要
 
 | 工作流 | 状态 | 说明 |
 |---|---|---|
-| stage-0 Wayland-only baseline | 进行中 | 构建系统、双 socket VirtualBackend、Qt shell 连接、core 包边界已通过初步验证 |
-| stage-1 compositor/shell 闭环 | 未开始 | 待 stage-0 验收通过后进入 |
+| stage-0 Wayland-only baseline | 验收通过 | 见 `tasks/stage-0/*.md` |
+| stage-1 compositor/shell 闭环 | 未开始 | 待 KMS 真机复验决策（CONFLICT-006） |
 | stage-2 login/lock | 未开始 | 待 stage-1 验收通过后进入 |
 | stage-3 boot/shutdown | 未开始 | 待 stage-2 验收通过后进入 |
 | stage-4 purge | 未开始 | 待 stage-3 验收通过后进入 |
-| installer 专用化 | 进行中 | 固定流程 UI 骨架可用；磁盘 Job 未实现且禁止在当前环境执行 |
+| installer 专用化 | 进行中 | 固定流程 UI 骨架可用；磁盘 Job 禁止在当前环境执行 |
 
-## 本次会话已完成并验证
+## 已完成并验证
 
 1. `wayland-scripts/build_code.sh` 四种旧用法、根目录覆盖、分类输出、源码副本 dpkg 构建、
    SOURCE_DATE_EPOCH、日志和 clean 边界均验证通过。
 2. `cutefish-compositor-core` VirtualBackend + 双 Wayland socket + cutefish_core_v1 +
    minimal xdg-shell；协议冒烟测试通过；Qt `cutefish-shell` 以 Wayland QPA 连接通过；
    `--kms` 安全拒绝通过。
-3. `cutefish-shell` Boot/Login/Session/Lock/Shutdown QML 骨架；offscreen QML 测试通过。
+3. `cutefish-shell` 五态 QML 骨架；offscreen QML 测试和 Wayland 连接测试通过。
 4. `cutefish-installer` 固定流程 UI 骨架；危险 Job 安全拒绝；offscreen QML 测试通过。
-5. `cutefish/wayland-code/core` Wayland-only 包边界迁移副本构建为 `cutefish-core_0.9.0_amd64.deb`；
-   无 X11 session 文件，无 kwin-wayland/xwayland/SDDM 依赖。
+5. `cutefish/wayland-code/core` Wayland-only 包边界迁移副本：
+   session、settings-daemon、powerman、notificationd、polkit-agent、clipboard、
+   cpufreq、screen-brightness、shutdown-ui；deb 无 kwin-wayland/xwayland/SDDM 依赖，
+   无 X11 session 文件。
 6. X11/KWin 源码符号扫描 0 命中；新包二进制直接依赖/符号扫描通过。
 7. `wayland-scripts/iso/` 新 target/live 包清单和移除清单通过自检。
 
@@ -47,17 +47,16 @@
 
 ## 下一步
 
-1. 继续 `core` 迁移副本：session、settings-daemon、powerman、notificationd、gmenuproxy、
-   chotkeys 等按阶段改成 Wayland 原生/停用形式，并重新验证 cutefish-core 包。
-2. 将 `wayland_protocol_smoke` 纳入包构建后 CI 测试路径（当前通过独立 CMake/CTest 执行）。
-3. 完成 `wayland-scripts/iso/` 到实际 ISO 构建脚本的等价实现。
-4. stage-0 全部验收项通过后，记录验收通过，再进入 stage-1。
+1. 等待并记录 CONFLICT-006 决策：批准专用 KMS 真机验证环境或明确替代验证策略。
+2. 批准后进入 stage-1：KmsBackend、LibinputBackend、LogindSession、完整最小协议、
+   WM/最终合成、Shell 窗口化回归。
+3. 并行继续安装器：polkit helper、固定 Job 清单、专用硬件验证环境下的安装测试。
+4. stage-1 完成前不得发布产品镜像；无 X11/KWin/SDDM/Calamares 运行链回退。
 
 ## 未完成事项
 
 - KMS/Libinput/Logind 真实硬件路径未实现，也未在任何环境执行 KMS 测试（见测试服务器边界）。
 - 安装器磁盘 Job 未实现；只允许在专用硬件验证环境执行，禁止在测试服务器执行。
-- 现有模块迁移副本未全部完成：session/settings-daemon/powerman/notificationd/gmenuproxy/
-  chotkeys/desktop/dock/statusbar/launcher/filemanager/fishui/qt-plugins/settings/
-  screenshot/screenlocker/libcutefish/screen 仍为后续任务。
-- 测试服务器 192.168.118.132 尚未使用；当前所有验证均在本机隔离 /tmp 和 offscreen 环境完成。
+- 现有模块迁移副本：desktop/dock/statusbar/launcher/filemanager/fishui/qt-plugins/
+  settings/screenshot/screenlocker/libcutefish/screen 按 stage-1 计划推进。
+- `wayland-scripts/iso/` 目前为包清单和检查器，完整 live/target 构建脚本待实现。

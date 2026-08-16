@@ -1,6 +1,6 @@
 # stage-0 任务：cutefish-compositor-core 工程骨架
 
-- 状态：进行中
+- 状态：验收通过（stage-0 工程骨架范围）
 - 方案依据：`stage-0` + `cutefish-dedicated-compositor-architecture.md`
 - 禁止：QtWaylandCompositor API、wlroots、eglfs_kms、KWin/KDE 桌面栈、X11/KWin 代码。
 
@@ -35,5 +35,5 @@ cmake --build ... && ctest --test-dir ... --output-on-failure
 
 ## 验收状态
 
-- 本任务项：验收通过（stage-0 工程骨架范围）。
+- stage-0 工程骨架：验收通过。
 - KMS/Libinput/Logind 真机路径未实现，属于 stage-1，当前被 CONFLICT-006 阻塞。

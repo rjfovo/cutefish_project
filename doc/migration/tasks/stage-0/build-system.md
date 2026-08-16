@@ -1,6 +1,6 @@
 # stage-0 任务：wayland-scripts 构建体系
 
-- 状态：进行中
+- 状态：验收通过
 - 方案依据：`doc/future/stage-0-wayland-only-baseline/README.md`
 - 边界：不修改旧 `script/build_code.sh`；新脚本位于 `wayland-scripts/`。
 
@@ -33,5 +33,4 @@
 
 ## 验收状态
 
-- 构建脚本行为：验收通过（本任务项）。
-- 整体 stage-0：未验收（core 服务迁移副本未全部完成）。
+- 构建脚本行为：验收通过。

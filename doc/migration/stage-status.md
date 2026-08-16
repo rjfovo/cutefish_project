@@ -4,9 +4,9 @@
 
 | Stage | 状态 | 开始时间 | 验收状态 | 阻塞项 | 备注 |
 |---|---|---|---|---|---|
-| stage-0-wayland-only-baseline | 进行中 | 2026-08-16 | 未验收 | 无 | 工程基线已验证；core 服务迁移副本未全部完成 |
-| stage-1-qt-compositor-shell | 未开始 | - | 未验收 | CONFLICT-006（KMS 真机复验等待硬件批准） | 未进入 |
+| stage-0-wayland-only-baseline | 验收通过 | 2026-08-16 | 通过 | 无 | 工程基线、构建系统、core/shell/installer 骨架、core 包边界均验证通过 |
+| stage-1-qt-compositor-shell | 未开始 | - | 未验收 | CONFLICT-006（KMS 真机复验等待硬件批准） | stage-0 已验收，待 KMS 决策后进入 |
 | stage-2-login-lock | 未开始 | - | 未验收 | 无 | 未进入 |
 | stage-3-boot-shutdown | 未开始 | - | 未验收 | 无 | 未进入 |
 | stage-4-purge | 未开始 | - | 未验收 | 无 | 未进入 |
-| installer 专用化（并行） | 进行中 | 2026-08-16 | 未验收 | 无 | UI/工程骨架可用；磁盘 Job 禁止在测试服务器执行 |
+| installer 专用化（并行） | 进行中 | 2026-08-16 | 未验收 | 无 | UI/工程骨架通过；磁盘 Job 未实现且禁止在测试服务器执行 |

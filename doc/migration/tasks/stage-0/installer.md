@@ -1,6 +1,6 @@
 # 并行工作流任务：cutefish-installer 专用化
 
-- 状态：进行中
+- 状态：进行中（stage-0 骨架通过，整体安装器未验收）
 - 方案依据：`installer-simplification.md`；并行执行。
 - 安全边界：当前环境禁止执行分区/格式化/grub-install/efivarfs 写入；测试服务器禁止磁盘 Job。
 
