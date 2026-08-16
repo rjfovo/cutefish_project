@@ -38,6 +38,7 @@ expected=(
     "stage-1/shell-core-client.md"
     "stage-1/data-device.md"
     "stage-1/shell-qml-models.md"
+    "stage-1/text-input.md"
 )
 
 fail=0
