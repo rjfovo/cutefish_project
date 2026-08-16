@@ -70,6 +70,11 @@
 - 涉及：`development-key-points.md` P0 要求实现 `zwp_input_method_v2`；
   当前 Debian 13 `wayland-protocols` 仅提供 `input-method-unstable-v1.xml`。
 - 停止点：不能以 v1 冒充 v2，也不能在未定义键盘 grab 状态机前实现 P0。
-- 等待决策：批准从上游 vendored `input-method-unstable-v2.xml`，并确认
-  fcitx5/ibus 键盘 grab、候选窗 surface、锁屏停止输入的状态机设计。
+- 等待决策：上游当前没有以 `zwp_input_method_v2` 命名的稳定 v2 XML；
+  Debian 只有 `input-method-unstable-v1.xml`，最新实验协议为
+  `xx_input_method_v2`。需批准采用/改写协议或确认兼容 v1 + text-input-v3 组合。
+  同时需确认 fcitx5/ibus 键盘 grab、候选窗 surface、锁屏停止输入状态机。
+- 已执行：vendor 重构版 `wlr-data-control-unstable-v1.xml` 至
+  `cutefish/wayland-code/cutefish-compositor-core/protocol/vendor/`；
+  上游 wlroots XML 当前网络不可达，文件为 v1 最小接口重构。
 - 状态：未解决。

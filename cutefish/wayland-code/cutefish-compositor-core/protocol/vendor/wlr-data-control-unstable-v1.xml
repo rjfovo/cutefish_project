@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Vendored reconstruction of wlroots wlr-data-control-unstable-v1, version 1.
+  Upstream wlroots XML was unavailable in the Debian archive; this file is
+  maintained in cutefish/wayland-code and must not be treated as a third-party
+  plugin surface. Only the data-control paths required by Cutefish are used.
+-->
+<protocol name="wlr_data_control_unstable_v1">
+  <copyright>wlroots protocol reconstruction for CutefishOS</copyright>
+
+  <interface name="zwlr_data_control_manager_v1" version="1">
+    <description summary="manage clipboard data control devices"/>
+
+    <request name="create_data_source">
+      <arg name="id" type="new_id" interface="zwlr_data_control_source_v1"/>
+    </request>
+
+    <request name="get_data_device">
+      <arg name="id" type="new_id" interface="zwlr_data_control_device_v1"/>
+      <arg name="seat" type="object" interface="wl_seat"/>
+    </request>
+  </interface>
+
+  <interface name="zwlr_data_control_device_v1" version="1">
+    <description summary="manage a data control device selection"/>
+
+    <request name="set_selection">
+      <arg name="source" type="object" interface="zwlr_data_control_source_v1" allow-null="true"/>
+    </request>
+
+    <request name="destroy" type="destructor"/>
+
+    <event name="data_offer">
+      <arg name="id" type="new_id" interface="zwlr_data_control_offer_v1"/>
+    </event>
+
+    <event name="selection">
+      <arg name="id" type="object" interface="zwlr_data_control_offer_v1" allow-null="true"/>
+    </event>
+  </interface>
+
+  <interface name="zwlr_data_control_source_v1" version="1">
+    <description summary="offer clipboard data to the compositor"/>
+
+    <request name="offer">
+      <arg name="mime_type" type="string"/>
+    </request>
+
+    <request name="destroy" type="destructor"/>
+
+    <event name="send">
+      <arg name="mime_type" type="string"/>
+      <arg name="fd" type="fd"/>
+    </event>
+
+    <event name="cancelled"/>
+  </interface>
+
+  <interface name="zwlr_data_control_offer_v1" version="1">
+    <description summary="receive clipboard data from the compositor"/>
+
+    <request name="receive">
+      <arg name="mime_type" type="string"/>
+      <arg name="fd" type="fd"/>
+    </request>
+
+    <request name="destroy" type="destructor"/>
+
+    <event name="offer">
+      <arg name="mime_type" type="string"/>
+    </event>
+  </interface>
+</protocol>

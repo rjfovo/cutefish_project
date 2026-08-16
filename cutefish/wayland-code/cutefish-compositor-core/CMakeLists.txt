@@ -91,11 +91,13 @@ set_target_properties(cutefish-text-input-protocol PROPERTIES POSITION_INDEPENDE
 set(PRIMARY_SELECTION_XML "${WAYLAND_PROTOCOLS_DATADIR}/unstable/primary-selection/primary-selection-unstable-v1.xml")
 set(PRIMARY_SELECTION_C "${CMAKE_CURRENT_BINARY_DIR}/primary-selection-unstable-v1-protocol.c")
 set(PRIMARY_SELECTION_SERVER_H "${CMAKE_CURRENT_BINARY_DIR}/wayland-primary-selection-unstable-v1-server-protocol.h")
+set(PRIMARY_SELECTION_CLIENT_H "${CMAKE_CURRENT_BINARY_DIR}/wayland-primary-selection-unstable-v1-client-protocol.h")
 
 add_custom_command(
-    OUTPUT "${PRIMARY_SELECTION_C}" "${PRIMARY_SELECTION_SERVER_H}"
+    OUTPUT "${PRIMARY_SELECTION_C}" "${PRIMARY_SELECTION_SERVER_H}" "${PRIMARY_SELECTION_CLIENT_H}"
     COMMAND "${WAYLAND_SCANNER}" private-code "${PRIMARY_SELECTION_XML}" "${PRIMARY_SELECTION_C}"
     COMMAND "${WAYLAND_SCANNER}" server-header "${PRIMARY_SELECTION_XML}" "${PRIMARY_SELECTION_SERVER_H}"
+    COMMAND "${WAYLAND_SCANNER}" client-header "${PRIMARY_SELECTION_XML}" "${PRIMARY_SELECTION_CLIENT_H}"
     DEPENDS "${PRIMARY_SELECTION_XML}"
     VERBATIM
 )
@@ -183,6 +185,7 @@ if(BUILD_TESTING)
         cutefish-xdg-shell-protocol
         cutefish-xdg-activation-protocol
         cutefish-text-input-protocol
+        cutefish-primary-selection-protocol
     )
     add_test(
         NAME wayland_protocol_smoke
