@@ -1,5 +1,7 @@
 #include "wayland/server.h"
+#include "input/libinput_backend.h"
 #include "wayland/xdg_shell.h"
+#include "wm/window.h"
 
 #include "cutefish-core-v1-server-protocol.h"
 
@@ -22,7 +24,6 @@ namespace Cutefish {
 namespace {
 
 constexpr uint32_t kCompositorVersion = 4;
-constexpr uint32_t kSeatVersion = 1;
 constexpr uint32_t kOutputVersion = 3;
 constexpr uint32_t kCoreProtocolVersion = 1;
 
@@ -43,7 +44,6 @@ struct SurfaceData : ResourceData {
 };
 
 extern const struct wl_compositor_interface compositorImplementation;
-extern const struct wl_seat_interface seatImplementation;
 
 void destroyResourceData(wl_resource *resource)
 {
@@ -236,86 +236,6 @@ void compositorCreateRegion(wl_client *client, wl_resource *resource, uint32_t i
 const struct wl_compositor_interface compositorImplementation = {
     compositorCreateSurface,
     compositorCreateRegion,
-};
-
-void seatBind(wl_client *client, void *data, uint32_t version, uint32_t id)
-{
-    Q_UNUSED(version)
-    auto *globals = static_cast<ServerGlobals *>(data);
-    auto *rd = new ResourceData;
-    rd->resource = wl_resource_create(client, &wl_seat_interface, kSeatVersion, id);
-    if (!rd->resource) {
-        delete rd;
-        wl_client_post_no_memory(client);
-        return;
-    }
-    rd->state = globals->server->state();
-    rd->server = globals->server;
-    wl_resource_set_implementation(rd->resource, &seatImplementation, rd, destroyResourceData);
-    wl_seat_send_capabilities(rd->resource, 0);
-}
-
-void pointerSetCursor(wl_client *client, wl_resource *resource, uint32_t serial, wl_resource *surface, int32_t hotspotX, int32_t hotspotY)
-{
-    Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(serial)
-    Q_UNUSED(surface)
-    Q_UNUSED(hotspotX)
-    Q_UNUSED(hotspotY)
-}
-
-const struct wl_pointer_interface pointerImplementation = {
-    pointerSetCursor,
-};
-
-void seatGetPointer(wl_client *client, wl_resource *resource, uint32_t id)
-{
-    Q_UNUSED(resource)
-    auto *rd = new ResourceData;
-    rd->resource = wl_resource_create(client, &wl_pointer_interface, 1, id);
-    if (!rd->resource) {
-        delete rd;
-        wl_client_post_no_memory(client);
-        return;
-    }
-    wl_resource_set_implementation(rd->resource, &pointerImplementation, rd, destroyResourceData);
-}
-
-const struct wl_keyboard_interface keyboardImplementation = {};
-
-void seatGetKeyboard(wl_client *client, wl_resource *resource, uint32_t id)
-{
-    Q_UNUSED(resource)
-    auto *rd = new ResourceData;
-    rd->resource = wl_resource_create(client, &wl_keyboard_interface, 1, id);
-    if (!rd->resource) {
-        delete rd;
-        wl_client_post_no_memory(client);
-        return;
-    }
-    wl_resource_set_implementation(rd->resource, &keyboardImplementation, rd, destroyResourceData);
-}
-
-const struct wl_touch_interface touchImplementation = {};
-
-void seatGetTouch(wl_client *client, wl_resource *resource, uint32_t id)
-{
-    Q_UNUSED(resource)
-    auto *rd = new ResourceData;
-    rd->resource = wl_resource_create(client, &wl_touch_interface, 1, id);
-    if (!rd->resource) {
-        delete rd;
-        wl_client_post_no_memory(client);
-        return;
-    }
-    wl_resource_set_implementation(rd->resource, &touchImplementation, rd, destroyResourceData);
-}
-
-const struct wl_seat_interface seatImplementation = {
-    seatGetPointer,
-    seatGetKeyboard,
-    seatGetTouch,
 };
 
 void outputRelease(wl_client *client, wl_resource *resource)
@@ -512,6 +432,40 @@ void coreBind(wl_client *client, void *data, uint32_t version, uint32_t id)
     qInfo() << "cutefish_core_v1 bound" << "pid" << pid << "uid" << uid << "gid" << gid;
 }
 
+void processLibinputEvents(LibinputBackend *backend, Seat *seat)
+{
+    if (!backend || !seat || !backend->context())
+        return;
+    while (libinput_event *event = libinput_get_event(backend->context())) {
+        const libinput_event_type type = libinput_event_get_type(event);
+        switch (type) {
+        case LIBINPUT_EVENT_KEYBOARD_KEY: {
+            auto *keyEvent = libinput_event_get_keyboard_event(event);
+            const uint32_t state = libinput_event_keyboard_get_key_state(keyEvent) == LIBINPUT_KEY_STATE_PRESSED
+                ? WL_KEYBOARD_KEY_STATE_PRESSED : WL_KEYBOARD_KEY_STATE_RELEASED;
+            seat->keyboardKey(libinput_event_keyboard_get_key(keyEvent), state);
+            break;
+        }
+        case LIBINPUT_EVENT_POINTER_MOTION: {
+            auto *pointerEvent = libinput_event_get_pointer_event(event);
+            seat->pointerMotion(libinput_event_pointer_get_dx(pointerEvent),
+                                libinput_event_pointer_get_dy(pointerEvent));
+            break;
+        }
+        case LIBINPUT_EVENT_POINTER_BUTTON: {
+            auto *pointerEvent = libinput_event_get_pointer_event(event);
+            const uint32_t state = libinput_event_pointer_get_button_state(pointerEvent) == LIBINPUT_BUTTON_STATE_PRESSED
+                ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED;
+            seat->pointerButton(libinput_event_pointer_get_button(pointerEvent), state);
+            break;
+        }
+        default:
+            break;
+        }
+        libinput_event_destroy(event);
+    }
+}
+
 } // namespace
 
 WaylandServer *WaylandServer::s_instance = nullptr;
@@ -520,8 +474,12 @@ WaylandServer::WaylandServer(CoreState *state, QObject *parent)
     : QObject(parent)
     , m_state(state)
     , m_workspace(new Workspace(this))
+    , m_seat(new Seat(this))
 {
     s_instance = this;
+    connect(m_workspace, &Workspace::activeWindowChanged, this, [this](Window *window) {
+        m_seat->setFocusSurface(window ? window->surface() : nullptr);
+    });
     if (::pipe2(m_terminatePipe, O_CLOEXEC | O_NONBLOCK) != 0)
         qWarning() << "failed to create termination pipe";
 }
@@ -549,13 +507,12 @@ bool WaylandServer::registerGlobals(wl_display *display, bool trustedShellDispla
     if (!wl_global_create(display, &wl_compositor_interface, kCompositorVersion,
                           globals, compositorBind))
         return false;
-    if (!wl_global_create(display, &wl_seat_interface, kSeatVersion,
-                          globals, seatBind))
-        return false;
     if (!wl_global_create(display, &wl_output_interface, kOutputVersion,
                           globals, outputBind))
         return false;
     if (wl_display_init_shm(display) != 0)
+        return false;
+    if (!m_seat->registerDisplay(display))
         return false;
     if (!registerXdgShellGlobals(display, this))
         return false;
@@ -631,6 +588,8 @@ int WaylandServer::run()
     const int shellFd = wl_event_loop_get_fd(shellLoop);
     const int appsFd = wl_event_loop_get_fd(appsLoop);
     const int terminateFd = m_terminatePipe[0];
+    auto *libinput = dynamic_cast<LibinputBackend *>(m_inputBackend);
+    const int inputFd = libinput ? libinput->fd() : -1;
     if (shellFd < 0 || appsFd < 0 || terminateFd < 0)
         return -1;
 
@@ -645,16 +604,22 @@ int WaylandServer::run()
             break;
         }
         if (shellEvents == 0 && appsEvents == 0) {
-            pollfd fds[3] = {
+            pollfd fds[4] = {
                 { shellFd, POLLIN, 0 },
                 { appsFd, POLLIN, 0 },
                 { terminateFd, POLLIN, 0 },
+                { inputFd, POLLIN, 0 },
             };
-            const int prc = poll(fds, 3, 100);
+            const nfds_t count = inputFd >= 0 ? 4 : 3;
+            const int prc = poll(fds, count, 100);
             if (prc < 0 && errno != EINTR)
                 break;
             if (prc > 0 && (fds[2].revents & POLLIN))
                 break;
+            if (prc > 0 && inputFd >= 0 && (fds[3].revents & POLLIN) && libinput) {
+                libinput->dispatch();
+                processLibinputEvents(libinput, m_seat);
+            }
         }
     }
     return 0;
@@ -688,6 +653,21 @@ WaylandServer *WaylandServer::instance()
 Workspace *WaylandServer::workspace() const
 {
     return m_workspace;
+}
+
+Seat *WaylandServer::seat() const
+{
+    return m_seat;
+}
+
+void WaylandServer::setInputBackend(InputBackend *backend)
+{
+    m_inputBackend = backend;
+}
+
+InputBackend *WaylandServer::inputBackend() const
+{
+    return m_inputBackend;
 }
 
 CoreState *WaylandServer::state() const

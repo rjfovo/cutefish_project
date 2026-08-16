@@ -32,6 +32,7 @@ struct RegistryState {
     uint32_t coreName = 0;
     uint32_t compositorName = 0;
     uint32_t xdgName = 0;
+    uint32_t seatName = 0;
 };
 
 struct ToplevelState {
@@ -39,6 +40,55 @@ struct ToplevelState {
     bool activated = false;
     bool maximized = false;
 };
+
+struct InputState {
+    bool keyboardEnter = false;
+    bool pointerEnter = false;
+    bool keymap = false;
+    bool modifiers = false;
+};
+
+void keyboardKeymap(void *data, wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size)
+{
+    Q_UNUSED(keyboard)
+    auto *state = static_cast<InputState *>(data);
+    if (format == WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1 && size > 0)
+        state->keymap = true;
+    if (fd >= 0)
+        close(fd);
+}
+
+void keyboardEnter(void *data, wl_keyboard *keyboard, uint32_t serial, wl_surface *surface, wl_array *keys)
+{
+    Q_UNUSED(keyboard)
+    Q_UNUSED(serial)
+    Q_UNUSED(surface)
+    Q_UNUSED(keys)
+    static_cast<InputState *>(data)->keyboardEnter = true;
+}
+
+void keyboardModifiers(void *data, wl_keyboard *keyboard, uint32_t serial,
+                       uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group)
+{
+    Q_UNUSED(keyboard)
+    Q_UNUSED(serial)
+    Q_UNUSED(depressed)
+    Q_UNUSED(latched)
+    Q_UNUSED(locked)
+    Q_UNUSED(group)
+    static_cast<InputState *>(data)->modifiers = true;
+}
+
+void pointerEnter(void *data, wl_pointer *pointer, uint32_t serial, wl_surface *surface,
+                  wl_fixed_t x, wl_fixed_t y)
+{
+    Q_UNUSED(pointer)
+    Q_UNUSED(serial)
+    Q_UNUSED(surface)
+    Q_UNUSED(x)
+    Q_UNUSED(y)
+    static_cast<InputState *>(data)->pointerEnter = true;
+}
 
 struct PopupState {
     int configureCount = 0;
@@ -100,8 +150,10 @@ void registryGlobal(void *data, wl_registry *registry, uint32_t name,
         state->compositor = true;
     else if (std::strcmp(interface, wl_shm_interface.name) == 0)
         state->shm = true;
-    else if (std::strcmp(interface, wl_seat_interface.name) == 0)
+    else if (std::strcmp(interface, wl_seat_interface.name) == 0) {
         state->seat = true;
+        state->seatName = name;
+    }
     else if (std::strcmp(interface, "xdg_wm_base") == 0)
         state->xdgShell = true;
     else if (std::strcmp(interface, cutefish_core_v1_interface.name) == 0) {
@@ -164,6 +216,26 @@ bool scanSocket(const QString &socketName, RegistryState *state)
         }
     }
 
+    InputState inputState;
+    wl_seat *seat = nullptr;
+    wl_pointer *pointer = nullptr;
+    wl_keyboard *keyboard = nullptr;
+
+    if (state->seat && state->seatName) {
+        seat = static_cast<wl_seat *>(
+            wl_registry_bind(registry, state->seatName, &wl_seat_interface, 5));
+        pointer = wl_seat_get_pointer(seat);
+        keyboard = wl_seat_get_keyboard(seat);
+        wl_pointer_listener pointerListener {};
+        pointerListener.enter = pointerEnter;
+        wl_pointer_add_listener(pointer, &pointerListener, &inputState);
+        wl_keyboard_listener keyboardListener {};
+        keyboardListener.keymap = keyboardKeymap;
+        keyboardListener.enter = keyboardEnter;
+        keyboardListener.modifiers = keyboardModifiers;
+        wl_keyboard_add_listener(keyboard, &keyboardListener, &inputState);
+    }
+
     if (state->xdgShell && state->compositor && state->xdgName && state->compositorName) {
         auto *compositor = static_cast<wl_compositor *>(
             wl_registry_bind(registry, state->compositorName, &wl_compositor_interface, 4));
@@ -191,6 +263,15 @@ bool scanSocket(const QString &socketName, RegistryState *state)
             }
             if (tracker.configureCount < 1 || !tracker.activated) {
                 qCritical() << "xdg initial configure missing activated state";
+                ok = false;
+            }
+            if (!inputState.keymap) {
+                qCritical() << "seat did not send xkb keymap";
+                ok = false;
+            }
+            if (!inputState.pointerEnter || !inputState.keyboardEnter || !inputState.modifiers) {
+                qCritical() << "seat focus enter/modifiers missing"
+                            << inputState.pointerEnter << inputState.keyboardEnter << inputState.modifiers;
                 ok = false;
             }
             xdg_toplevel_set_maximized(toplevel);
@@ -232,6 +313,12 @@ bool scanSocket(const QString &socketName, RegistryState *state)
         xdg_wm_base_destroy(wm);
     }
 
+    if (pointer)
+        wl_pointer_destroy(pointer);
+    if (keyboard)
+        wl_keyboard_destroy(keyboard);
+    if (seat)
+        wl_seat_destroy(seat);
     wl_registry_destroy(registry);
     wl_display_disconnect(display);
     return ok;

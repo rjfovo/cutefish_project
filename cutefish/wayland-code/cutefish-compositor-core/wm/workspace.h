@@ -25,6 +25,9 @@ public:
     QList<Window *> windows() const;
     QList<Window *> windowsInStackingOrder() const;
 
+signals:
+    void activeWindowChanged(Window *window);
+
 private:
     QList<Window *> m_windows;
     Window *m_activeWindow = nullptr;

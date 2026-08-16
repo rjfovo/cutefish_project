@@ -1,6 +1,7 @@
 #include "backend/kms_backend.h"
 #include "backend/virtual_backend.h"
 #include "core_state.h"
+#include "input/libinput_backend.h"
 #include "wayland/server.h"
 
 #include <QCommandLineParser>
@@ -98,6 +99,9 @@ int main(int argc, char **argv)
     state.setDisplayBackend(backend);
 
     Cutefish::WaylandServer server(&state);
+    Cutefish::LibinputBackend inputBackend;
+    inputBackend.initialize();
+    server.setInputBackend(&inputBackend);
     if (!server.start(runtimeDir, appsSocket, shellSocket)) {
         qCritical() << "Wayland server failed to start";
         return 1;
@@ -105,6 +109,7 @@ int main(int argc, char **argv)
 
     const int rc = server.run();
     qInfo() << "compositor core stopped, rc" << rc;
+    inputBackend.shutdown();
     backend->shutdown();
     return rc == 0 ? 0 : 1;
 }

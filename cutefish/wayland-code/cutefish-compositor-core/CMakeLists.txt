@@ -18,6 +18,7 @@ pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
 pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm)
 pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
 pkg_check_modules(UDEV REQUIRED IMPORTED_TARGET libudev)
+pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 
 find_program(WAYLAND_SCANNER NAMES wayland-scanner REQUIRED)
 
@@ -77,6 +78,7 @@ add_executable(cutefish-compositor-core
     lifecycle/state_machine.cpp
     wm/window.cpp
     wm/workspace.cpp
+    wayland/seat.cpp
     wayland/server.cpp
     wayland/xdg_shell.cpp
 )
@@ -93,6 +95,7 @@ target_link_libraries(cutefish-compositor-core PRIVATE
     PkgConfig::GBM
     PkgConfig::LIBINPUT
     PkgConfig::UDEV
+    PkgConfig::XKBCOMMON
     cutefish-core-v1-protocol
     cutefish-xdg-shell-protocol
 )

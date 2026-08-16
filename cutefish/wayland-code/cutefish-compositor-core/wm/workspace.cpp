@@ -59,6 +59,7 @@ void Workspace::setActiveWindow(Window *window)
     m_activeWindow = window;
     if (m_activeWindow)
         m_activeWindow->setActivated(true);
+    emit activeWindowChanged(m_activeWindow);
 }
 
 QList<Window *> Workspace::windows() const

@@ -26,6 +26,7 @@ public:
     void touchUp(int id) override;
 
     int fd() const;
+    libinput *context() const;
 
 private:
     libinput *m_context = nullptr;

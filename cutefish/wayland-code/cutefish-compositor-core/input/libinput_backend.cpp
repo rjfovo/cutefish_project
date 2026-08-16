@@ -71,6 +71,11 @@ int LibinputBackend::fd() const
     return m_context ? libinput_get_fd(m_context) : -1;
 }
 
+libinput *LibinputBackend::context() const
+{
+    return m_context;
+}
+
 void LibinputBackend::setKeyboardLayout(const QString &layout)
 {
     m_keyboardLayout = layout;
