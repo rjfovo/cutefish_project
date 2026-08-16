@@ -7,7 +7,7 @@
 ## 总进度
 
 - 当前阶段：stage-1（进行中）
-- 当前任务：Shell 私有协议客户端、com.cutefish.Display 输出管理、后续 P0 协议与 WM 交互
+- 当前任务：P0 协议推进（剪贴板/文本输入）、move/resize 模型、Shell QML 模型、真机复验
 - 阻塞项：CONFLICT-006 部分解决；VMware 虚拟 GPU 探针通过，AMD/Intel 物理 GPU
   模式设置/上屏复验仍待设备或明确放宽策略
 
@@ -16,7 +16,7 @@
 | 工作流 | 状态 | 说明 |
 |---|---|---|
 | stage-0 Wayland-only baseline | 验收通过 | 见 `tasks/stage-0/*.md` |
-| stage-1 compositor/shell 闭环 | 进行中 | KmsBackend/Libinput/Logind 开发中；物理 GPU 复验待 CONFLICT-006 |
+| stage-1 compositor/shell 闭环 | 进行中 | 协议/WM/QML 模型推进；CONFLICT-006/007 待解决 |
 | stage-2 login/lock | 未开始 | 待 stage-1 验收通过后进入 |
 | stage-3 boot/shutdown | 未开始 | 待 stage-2 验收通过后进入 |
 | stage-4 purge | 未开始 | 待 stage-3 验收通过后进入 |
