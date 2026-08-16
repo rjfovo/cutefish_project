@@ -26,3 +26,4 @@
 - `wayland_protocol_smoke` 验证 manager/source/device 创建：PASS。
 - 修复协议顺序：先 `data_offer`(new_id) → `offer`(mime) → `selection`(object)。
 - 剪贴板写入 → core 缓存 → `receive` 回读 `hello-cutefish-clipboard`：PASS。
+- 主选择写入 → core 主选择缓存 → primary offer receive 回读：PASS。

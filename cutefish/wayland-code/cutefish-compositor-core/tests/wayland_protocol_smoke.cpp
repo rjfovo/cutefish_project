@@ -5,6 +5,7 @@
 #include "cutefish-core-v1-client-protocol.h"
 #include "xdg-activation-v1-client-protocol.h"
 #include "text-input-unstable-v3-client-protocol.h"
+#include "wayland-primary-selection-unstable-v1-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
 #include <QCoreApplication>
@@ -32,6 +33,7 @@ struct RegistryState {
     bool xdgShell = false;
     bool activation = false;
     bool dataManager = false;
+    bool primarySelection = false;
     bool textInput = false;
     bool core = false;
     uint32_t coreName = 0;
@@ -40,6 +42,7 @@ struct RegistryState {
     uint32_t seatName = 0;
     uint32_t activationName = 0;
     uint32_t dataManagerName = 0;
+    uint32_t primarySelectionName = 0;
     uint32_t textInputName = 0;
 };
 
@@ -53,6 +56,45 @@ struct ToplevelState {
 struct ActivationState {
     char token[128] = {};
 };
+
+struct PrimaryDataState {
+    zwp_primary_selection_offer_v1 *offer = nullptr;
+    bool sourceSent = false;
+    QByteArray received;
+};
+
+void primarySourceSend(void *data, zwp_primary_selection_source_v1 *source, const char *mimeType, int32_t fd)
+{
+    Q_UNUSED(source)
+    auto *state = static_cast<PrimaryDataState *>(data);
+    if (qstrcmp(mimeType, "text/plain") != 0) {
+        close(fd);
+        return;
+    }
+    const QByteArray payload = QByteArrayLiteral("hello-cutefish-primary");
+    size_t written = 0;
+    while (written < static_cast<size_t>(payload.size())) {
+        const ssize_t n = write(fd, payload.constData() + written, payload.size() - written);
+        if (n < 0 && errno == EAGAIN)
+            continue;
+        if (n <= 0)
+            break;
+        written += static_cast<size_t>(n);
+    }
+    close(fd);
+    state->sourceSent = written == payload.size();
+}
+
+void primaryDeviceDataOffer(void *data, zwp_primary_selection_device_v1 *device, zwp_primary_selection_offer_v1 *offer)
+{
+    Q_UNUSED(data) Q_UNUSED(device) Q_UNUSED(offer)
+}
+
+void primaryDeviceSelection(void *data, zwp_primary_selection_device_v1 *device, zwp_primary_selection_offer_v1 *offer)
+{
+    Q_UNUSED(device)
+    static_cast<PrimaryDataState *>(data)->offer = offer;
+}
 
 struct DataState {
     wl_data_offer *offer = nullptr;
@@ -298,6 +340,9 @@ void registryGlobal(void *data, wl_registry *registry, uint32_t name,
     } else if (std::strcmp(interface, wl_data_device_manager_interface.name) == 0) {
         state->dataManager = true;
         state->dataManagerName = name;
+    } else if (std::strcmp(interface, "zwp_primary_selection_device_manager_v1") == 0) {
+        state->primarySelection = true;
+        state->primarySelectionName = name;
     } else if (std::strcmp(interface, "zwp_text_input_manager_v3") == 0) {
         state->textInput = true;
         state->textInputName = name;
@@ -460,6 +505,53 @@ bool scanSocket(const QString &socketName, RegistryState *state)
         wl_data_source_destroy(source);
         wl_data_device_destroy(dataDevice);
         wl_data_device_manager_destroy(dataManager);
+    }
+
+    PrimaryDataState primaryState;
+    if (state->primarySelection && state->primarySelectionName && state->seatName) {
+        auto *primaryManager = static_cast<zwp_primary_selection_device_manager_v1 *>(
+            wl_registry_bind(registry, state->primarySelectionName,
+                             &zwp_primary_selection_device_manager_v1_interface, 1));
+        auto *primaryDevice = zwp_primary_selection_device_manager_v1_get_device(primaryManager, seat);
+        zwp_primary_selection_device_v1_listener primaryDeviceListener {};
+        primaryDeviceListener.data_offer = primaryDeviceDataOffer;
+        primaryDeviceListener.selection = primaryDeviceSelection;
+        zwp_primary_selection_device_v1_add_listener(primaryDevice, &primaryDeviceListener, &primaryState);
+        auto *primarySource = zwp_primary_selection_device_manager_v1_create_source(primaryManager);
+        zwp_primary_selection_source_v1_listener primarySourceListener {};
+        primarySourceListener.send = primarySourceSend;
+        zwp_primary_selection_source_v1_add_listener(primarySource, &primarySourceListener, &primaryState);
+        zwp_primary_selection_source_v1_offer(primarySource, "text/plain");
+        zwp_primary_selection_device_v1_set_selection(primaryDevice, primarySource, 1);
+        if (wl_display_roundtrip(display) < 0 || !primaryState.sourceSent || !primaryState.offer) {
+            qCritical() << "primary selection roundtrip failed";
+            ok = false;
+        } else {
+            int pfd[2] = {-1, -1};
+            if (pipe(pfd) != 0) {
+                ok = false;
+            } else {
+                zwp_primary_selection_offer_v1_receive(primaryState.offer, "text/plain", pfd[1]);
+                close(pfd[1]);
+                wl_display_flush(display);
+                char buf[128] = {};
+                while (true) {
+                    const ssize_t n = read(pfd[0], buf, sizeof(buf) - 1);
+                    if (n > 0)
+                        primaryState.received.append(buf, static_cast<int>(n));
+                    if (n <= 0)
+                        break;
+                }
+                close(pfd[0]);
+                if (primaryState.received != QByteArrayLiteral("hello-cutefish-primary")) {
+                    qCritical() << "primary receive mismatch" << primaryState.received;
+                    ok = false;
+                }
+            }
+        }
+        zwp_primary_selection_source_v1_destroy(primarySource);
+        zwp_primary_selection_device_v1_destroy(primaryDevice);
+        zwp_primary_selection_device_manager_v1_destroy(primaryManager);
     }
     if (state->xdgShell && state->compositor && state->xdgName && state->compositorName) {
         auto *compositor = static_cast<wl_compositor *>(
