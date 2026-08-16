@@ -1,7 +1,7 @@
 # 下次继续前先读我：当前交接快照
 
 > 生成时间：2026-08-16
-> 当前 git HEAD：24edff08
+> 当前 git HEAD：cc6d468a
 > 使用方式：下次会话先读本文件，再读 `README.md`、`stage-status.md`、`conflicts.md`，
 > 然后从“下次开始执行”继续。
 
