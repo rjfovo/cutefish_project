@@ -7,7 +7,7 @@
 ## 总进度
 
 - 当前阶段：stage-1（进行中）
-- 当前任务：WM 窗口模型、xdg_toplevel/popup/positioner 协议路径、后端安全探针
+- 当前任务：wl_seat/libinput 输入链路、cutefish_core_v1 v2 窗口模型、xdg-shell 状态路径
 - 阻塞项：CONFLICT-006 部分解决；VMware 虚拟 GPU 探针通过，AMD/Intel 物理 GPU
   模式设置/上屏复验仍待设备或明确放宽策略
 
