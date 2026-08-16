@@ -37,8 +37,8 @@ patterns=(
     'XWayland'
     'xwayland'
     '/usr/share/xsessions'
-    'DISPLAY'
-    'XAUTHORITY'
+    '\bDISPLAY\b'
+    '\bXAUTHORITY\b'
 )
 
 scan_file() {
@@ -46,8 +46,9 @@ scan_file() {
     local pattern
     local line_no
     while IFS= read -r line_no || [ -n "$line_no" ]; do
+        local text="${line_no#*:}"
         for pattern in "${patterns[@]}"; do
-            if [[ "${line_no#*:}" == *"$pattern"* ]]; then
+            if grep -qE -- "$pattern" <<<"$text"; then
                 echo "$file:$line_no"
                 break
             fi

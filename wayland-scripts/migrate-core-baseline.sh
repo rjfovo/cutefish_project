@@ -3,10 +3,12 @@
 #
 # This script never modifies the frozen cutefish/code/ tree. It copies an
 # explicit, auditable allow-list of Wayland-clean components into
-# cutefish/wayland-code/core and records the source commit. X11/KWin/SDDM
-# components (cupdatecursor, xembed-sni-proxy, sddm-helper, chotkeys,
-# gmenuproxy, session X11/KWin paths, powerman X DPMS, settings-daemon
-# X11 backends) are intentionally NOT copied.
+# cutefish/wayland-code/core and records the source commit.
+#
+# Components that have been rewritten as Wayland-native migration copies
+# (session, settings-daemon, powerman, notificationd) are validated in place
+# and are NOT overwritten by a blind copy. Legacy display-server components
+# are intentionally absent from the new build manifest.
 
 set -euo pipefail
 
@@ -22,8 +24,6 @@ fi
 
 mkdir -p "$NEW"
 
-# Explicit component allow-list. Each component is copied as a migration copy;
-# the new top-level CMake and debian packaging are authored separately below.
 components=(
     cpufreq
     screen-brightness
@@ -36,7 +36,22 @@ for component in "${components[@]}"; do
     rm -rf "$NEW/$component"
     mkdir -p "$NEW/$component"
     cp -a "$OLD/$component/." "$NEW/$component/"
-    echo "migrated component: $component"
+    echo "migrated component copy: $component"
+done
+
+authored_wayland_components=(
+    session
+    settings-daemon
+    powerman
+    notificationd
+)
+
+for component in "${authored_wayland_components[@]}"; do
+    if [ ! -d "$NEW/$component" ]; then
+        echo "ERROR: authored Wayland migration missing: $component" >&2
+        exit 1
+    fi
+    echo "validated authored Wayland migration: $component"
 done
 
 for misc in LICENSE README.md cutefish; do
@@ -54,4 +69,4 @@ if git -C "$ROOT" rev-parse --verify HEAD >/dev/null 2>&1; then
 fi
 
 echo "Core baseline migration copy complete."
-echo "Forbidden components were not copied and are not in the new build manifest."
+echo "Legacy display-server components are not copied and are not in the new build manifest."
