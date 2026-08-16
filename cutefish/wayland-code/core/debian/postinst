@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+# Wayland-only package: intentionally no x-session-manager alternative and no
+# X11 session registration.
+#DEBHELPER#
+exit 0

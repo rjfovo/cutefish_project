@@ -1,0 +1,3 @@
+source=/workspace/cutefish_project/cutefish/code/core
+source_commit=c9866556299d16e34c5cfd253a6bcfbb110077f8
+migration_tool=wayland-scripts/migrate-core-baseline.sh

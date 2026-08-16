@@ -1,0 +1,7 @@
+cutefish-core (0.9.0) unstable; urgency=medium
+
+  * Stage-0 Wayland-only migration copy.
+  * Remove X11 session, cupdatecursor, xembed-sni-proxy, sddm-helper.
+  * Remove kwin-wayland and xwayland package dependencies.
+
+ -- CutefishOS <cutefishos@foxmail.com>  Sun, 16 Aug 2026 00:00:00 +0000

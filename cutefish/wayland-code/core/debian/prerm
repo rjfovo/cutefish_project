@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+# Wayland-only package: no x-session-manager alternative to remove.
+#DEBHELPER#
+exit 0
