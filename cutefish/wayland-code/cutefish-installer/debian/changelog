@@ -1,0 +1,5 @@
+cutefish-installer (0.1.0) unstable; urgency=medium
+
+  * Stage-0 Wayland-only engineering baseline.
+
+ -- CutefishOS <cutefishos@foxmail.com>  Sun, 16 Aug 2026 00:00:00 +0000
