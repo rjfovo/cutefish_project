@@ -29,6 +29,13 @@ public:
 
     void pointerMotion(double dx, double dy);
     void pointerButton(uint32_t button, uint32_t state);
+    void pointerAxis(uint32_t axis, double value, int32_t discrete);
+    void pointerFrame();
+    void touchDown(int id, double x, double y);
+    void touchMotion(int id, double x, double y);
+    void touchUp(int id);
+    void touchFrame();
+    void touchCancel();
     void keyboardKey(uint32_t evdevKey, uint32_t state);
     void setKeyboardLayout(const QString &layout);
 

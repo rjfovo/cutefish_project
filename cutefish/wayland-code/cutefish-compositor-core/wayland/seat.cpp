@@ -316,6 +316,8 @@ void Seat::sendKeyboardEnter(wl_client *client, wl_resource *surface)
             wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
                                     m_keymapFd, static_cast<uint32_t>(m_keymapSize));
         }
+        if (wl_resource_get_version(keyboard) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
+            wl_keyboard_send_repeat_info(keyboard, 33, 500);
         wl_array keys;
         wl_array_init(&keys);
         wl_keyboard_send_enter(keyboard, serial, surface, &keys);
@@ -365,6 +367,96 @@ void Seat::keyboardResourceCreated(wl_client *client)
         ensureKeymap();
         sendKeyboardEnter(client, m_focusSurface);
     }
+}
+
+void Seat::pointerAxis(uint32_t axis, double value, int32_t discrete)
+{
+    if (!m_focusClient)
+        return;
+    ClientState *state = stateForClient(m_focusClient, false);
+    if (!state)
+        return;
+    for (wl_resource *pointer : state->pointers) {
+        if (wl_resource_get_version(pointer) >= WL_POINTER_AXIS_SOURCE_SINCE_VERSION)
+            wl_pointer_send_axis_source(pointer, WL_POINTER_AXIS_SOURCE_WHEEL);
+        wl_pointer_send_axis(pointer, 0, axis, wl_fixed_from_double(value));
+        if (wl_resource_get_version(pointer) >= WL_POINTER_AXIS_DISCRETE_SINCE_VERSION)
+            wl_pointer_send_axis_discrete(pointer, axis, discrete);
+        if (wl_resource_get_version(pointer) >= WL_POINTER_AXIS_STOP_SINCE_VERSION)
+            wl_pointer_send_axis_stop(pointer, 0, axis);
+        pointerFrame();
+    }
+}
+
+void Seat::pointerFrame()
+{
+    if (!m_focusClient)
+        return;
+    ClientState *state = stateForClient(m_focusClient, false);
+    if (!state)
+        return;
+    for (wl_resource *pointer : state->pointers) {
+        if (wl_resource_get_version(pointer) >= WL_POINTER_FRAME_SINCE_VERSION)
+            wl_pointer_send_frame(pointer);
+    }
+}
+
+void Seat::touchDown(int id, double x, double y)
+{
+    if (!m_focusClient)
+        return;
+    ClientState *state = stateForClient(m_focusClient, false);
+    if (!state)
+        return;
+    const uint32_t serial = wl_display_next_serial(wl_client_get_display(m_focusClient));
+    for (wl_resource *touch : state->touches)
+        wl_touch_send_down(touch, serial, 0, m_focusSurface, id,
+                           wl_fixed_from_double(x), wl_fixed_from_double(y));
+}
+
+void Seat::touchMotion(int id, double x, double y)
+{
+    if (!m_focusClient)
+        return;
+    ClientState *state = stateForClient(m_focusClient, false);
+    if (!state)
+        return;
+    for (wl_resource *touch : state->touches)
+        wl_touch_send_motion(touch, 0, id, wl_fixed_from_double(x), wl_fixed_from_double(y));
+}
+
+void Seat::touchUp(int id)
+{
+    if (!m_focusClient)
+        return;
+    ClientState *state = stateForClient(m_focusClient, false);
+    if (!state)
+        return;
+    const uint32_t serial = wl_display_next_serial(wl_client_get_display(m_focusClient));
+    for (wl_resource *touch : state->touches)
+        wl_touch_send_up(touch, serial, 0, id);
+}
+
+void Seat::touchFrame()
+{
+    if (!m_focusClient)
+        return;
+    ClientState *state = stateForClient(m_focusClient, false);
+    if (!state)
+        return;
+    for (wl_resource *touch : state->touches)
+        wl_touch_send_frame(touch);
+}
+
+void Seat::touchCancel()
+{
+    if (!m_focusClient)
+        return;
+    ClientState *state = stateForClient(m_focusClient, false);
+    if (!state)
+        return;
+    for (wl_resource *touch : state->touches)
+        wl_touch_send_cancel(touch);
 }
 
 void Seat::pointerMotion(double dx, double dy)

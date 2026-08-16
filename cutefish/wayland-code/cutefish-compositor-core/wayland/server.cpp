@@ -471,6 +471,42 @@ void processLibinputEvents(LibinputBackend *backend, Seat *seat)
             seat->pointerButton(libinput_event_pointer_get_button(pointerEvent), state);
             break;
         }
+        case LIBINPUT_EVENT_POINTER_AXIS: {
+            auto *pointerEvent = libinput_event_get_pointer_event(event);
+            const double value = libinput_event_pointer_get_axis_value(
+                pointerEvent, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+            const int32_t discrete = static_cast<int32_t>(
+                libinput_event_pointer_get_axis_value_discrete(
+                    pointerEvent, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL));
+            seat->pointerAxis(WL_POINTER_AXIS_VERTICAL_SCROLL, value, discrete);
+            break;
+        }
+        case LIBINPUT_EVENT_TOUCH_DOWN: {
+            auto *touchEvent = libinput_event_get_touch_event(event);
+            seat->touchDown(libinput_event_touch_get_seat_slot(touchEvent),
+                            libinput_event_touch_get_x(touchEvent),
+                            libinput_event_touch_get_y(touchEvent));
+            break;
+        }
+        case LIBINPUT_EVENT_TOUCH_MOTION: {
+            auto *touchEvent = libinput_event_get_touch_event(event);
+            seat->touchMotion(libinput_event_touch_get_seat_slot(touchEvent),
+                              libinput_event_touch_get_x(touchEvent),
+                              libinput_event_touch_get_y(touchEvent));
+            break;
+        }
+        case LIBINPUT_EVENT_TOUCH_UP: {
+            auto *touchEvent = libinput_event_get_touch_event(event);
+            seat->touchUp(libinput_event_touch_get_seat_slot(touchEvent));
+            seat->touchFrame();
+            break;
+        }
+        case LIBINPUT_EVENT_TOUCH_FRAME:
+            seat->touchFrame();
+            break;
+        case LIBINPUT_EVENT_TOUCH_CANCEL:
+            seat->touchCancel();
+            break;
         default:
             break;
         }
@@ -487,6 +523,7 @@ WaylandServer::WaylandServer(CoreState *state, QObject *parent)
     , m_state(state)
     , m_workspace(new Workspace(this))
     , m_seat(new Seat(this))
+    , m_activation(new XdgActivation(this, this))
 {
     s_instance = this;
     connect(m_workspace, &Workspace::activeWindowChanged, this, [this](Window *window) {
@@ -527,6 +564,8 @@ bool WaylandServer::registerGlobals(wl_display *display, bool trustedShellDispla
     if (wl_display_init_shm(display) != 0)
         return false;
     if (!m_seat->registerDisplay(display))
+        return false;
+    if (!m_activation->registerDisplay(display))
         return false;
     if (!registerXdgShellGlobals(display, this))
         return false;
@@ -672,6 +711,11 @@ Workspace *WaylandServer::workspace() const
 Seat *WaylandServer::seat() const
 {
     return m_seat;
+}
+
+XdgActivation *WaylandServer::activation() const
+{
+    return m_activation;
 }
 
 void WaylandServer::setInputBackend(InputBackend *backend)

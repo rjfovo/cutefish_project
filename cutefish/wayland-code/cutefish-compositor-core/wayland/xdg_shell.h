@@ -1,14 +1,16 @@
 #pragma once
 
 #include "wayland/server.h"
+#include "wm/window.h"
+
+#include <QList>
+#include <QSize>
 
 #include <wayland-server-core.h>
 
 namespace Cutefish {
 
-// Registers the minimal stable xdg-shell global used by the stage-0
-// VirtualBackend smoke baseline. No window-management policy is implemented
-// here; toplevel move/resize and maximization are intentionally no-ops.
 bool registerXdgShellGlobals(wl_display *display, WaylandServer *server);
+void configureXdgToplevel(Window *window, const QSize &size, const QList<uint32_t> &states);
 
 } // namespace Cutefish

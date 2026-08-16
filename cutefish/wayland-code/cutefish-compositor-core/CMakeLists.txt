@@ -68,6 +68,27 @@ set_target_properties(cutefish-xdg-shell-protocol PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+# xdg-activation-v1 (staging) protocol code.
+set(XDG_ACTIVATION_XML "${WAYLAND_PROTOCOLS_DATADIR}/staging/xdg-activation/xdg-activation-v1.xml")
+set(XDG_ACTIVATION_C "${CMAKE_CURRENT_BINARY_DIR}/xdg-activation-v1-protocol.c")
+set(XDG_ACTIVATION_SERVER_H "${CMAKE_CURRENT_BINARY_DIR}/xdg-activation-v1-server-protocol.h")
+set(XDG_ACTIVATION_CLIENT_H "${CMAKE_CURRENT_BINARY_DIR}/xdg-activation-v1-client-protocol.h")
+
+add_custom_command(
+    OUTPUT "${XDG_ACTIVATION_C}" "${XDG_ACTIVATION_SERVER_H}" "${XDG_ACTIVATION_CLIENT_H}"
+    COMMAND "${WAYLAND_SCANNER}" private-code "${XDG_ACTIVATION_XML}" "${XDG_ACTIVATION_C}"
+    COMMAND "${WAYLAND_SCANNER}" server-header "${XDG_ACTIVATION_XML}" "${XDG_ACTIVATION_SERVER_H}"
+    COMMAND "${WAYLAND_SCANNER}" client-header "${XDG_ACTIVATION_XML}" "${XDG_ACTIVATION_CLIENT_H}"
+    DEPENDS "${XDG_ACTIVATION_XML}"
+    VERBATIM
+)
+
+add_library(cutefish-xdg-activation-protocol STATIC "${XDG_ACTIVATION_C}")
+target_include_directories(cutefish-xdg-activation-protocol PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+set_target_properties(cutefish-xdg-activation-protocol PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
 add_executable(cutefish-compositor-core
     main.cpp
     backend/virtual_backend.cpp
@@ -80,6 +101,7 @@ add_executable(cutefish-compositor-core
     wm/workspace.cpp
     wayland/seat.cpp
     wayland/server.cpp
+    wayland/xdg_activation.cpp
     wayland/xdg_shell.cpp
 )
 target_include_directories(cutefish-compositor-core PRIVATE
@@ -98,6 +120,7 @@ target_link_libraries(cutefish-compositor-core PRIVATE
     PkgConfig::XKBCOMMON
     cutefish-core-v1-protocol
     cutefish-xdg-shell-protocol
+    cutefish-xdg-activation-protocol
 )
 
 install(TARGETS cutefish-compositor-core RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -116,6 +139,7 @@ if(BUILD_TESTING)
         PkgConfig::WAYLAND_CLIENT
         cutefish-core-v1-protocol
         cutefish-xdg-shell-protocol
+        cutefish-xdg-activation-protocol
     )
     add_test(
         NAME wayland_protocol_smoke

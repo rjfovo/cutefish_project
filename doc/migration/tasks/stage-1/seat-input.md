@@ -30,3 +30,9 @@
 
 - 未验收。待完成：pointer axis/frame、touch、重复率、xkb layout 切换、
   真实输入设备端到端回归。
+
+## 追加：pointer axis/touch 与键盘重复率
+
+- Seat 增加 pointer axis/source/discrete/stop/frame、touch down/motion/up/frame/cancel、
+  keyboard repeat_info。
+- libinput 事件翻译增加 POINTER_AXIS、TOUCH_DOWN/MOTION/UP/FRAME/CANCEL。

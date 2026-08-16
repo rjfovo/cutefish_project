@@ -3,6 +3,7 @@
 // devices and never performs privileged operations.
 
 #include "cutefish-core-v1-client-protocol.h"
+#include "xdg-activation-v1-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
 #include <QCoreApplication>
@@ -28,17 +29,24 @@ struct RegistryState {
     bool shm = false;
     bool seat = false;
     bool xdgShell = false;
+    bool activation = false;
     bool core = false;
     uint32_t coreName = 0;
     uint32_t compositorName = 0;
     uint32_t xdgName = 0;
     uint32_t seatName = 0;
+    uint32_t activationName = 0;
 };
 
 struct ToplevelState {
     int configureCount = 0;
+    int activatedConfigures = 0;
     bool activated = false;
     bool maximized = false;
+};
+
+struct ActivationState {
+    char token[128] = {};
 };
 
 struct CoreWindowState {
@@ -197,8 +205,10 @@ void toplevelConfigure(void *data, xdg_toplevel *toplevel, int32_t width, int32_
     for (size_t i = 0; i < states->size / sizeof(uint32_t); ++i) {
         uint32_t state = 0;
         std::memcpy(&state, static_cast<char *>(states->data) + i * sizeof(uint32_t), sizeof(state));
-        if (state == XDG_TOPLEVEL_STATE_ACTIVATED)
+        if (state == XDG_TOPLEVEL_STATE_ACTIVATED) {
             tracker->activated = true;
+            tracker->activatedConfigures++;
+        }
         if (state == XDG_TOPLEVEL_STATE_MAXIMIZED)
             tracker->maximized = true;
     }
@@ -208,6 +218,13 @@ void toplevelClose(void *data, xdg_toplevel *toplevel)
 {
     Q_UNUSED(data)
     Q_UNUSED(toplevel)
+}
+
+void activationDone(void *data, xdg_activation_token_v1 *token, const char *value)
+{
+    Q_UNUSED(token)
+    auto *state = static_cast<ActivationState *>(data);
+    std::strncpy(state->token, value ? value : "", sizeof(state->token) - 1);
 }
 
 void registryGlobal(void *data, wl_registry *registry, uint32_t name,
@@ -224,9 +241,13 @@ void registryGlobal(void *data, wl_registry *registry, uint32_t name,
         state->seat = true;
         state->seatName = name;
     }
-    else if (std::strcmp(interface, "xdg_wm_base") == 0)
+    else if (std::strcmp(interface, "xdg_wm_base") == 0) {
         state->xdgShell = true;
-    else if (std::strcmp(interface, cutefish_core_v1_interface.name) == 0) {
+        state->xdgName = name;
+    } else if (std::strcmp(interface, "xdg_activation_v1") == 0) {
+        state->activation = true;
+        state->activationName = name;
+    } else if (std::strcmp(interface, cutefish_core_v1_interface.name) == 0) {
         state->core = true;
         state->coreName = name;
     }
@@ -267,6 +288,7 @@ bool scanSocket(const QString &socketName, RegistryState *state)
             << "shm" << state->shm
             << "seat" << state->seat
             << "xdg_wm_base" << state->xdgShell
+            << "xdg_activation" << state->activation
             << "cutefish_core_v1" << state->core;
 
     cutefish_core_v1 *core = nullptr;
@@ -367,6 +389,32 @@ bool scanSocket(const QString &socketName, RegistryState *state)
             if (core && coreWindowState.stateChanges < 1) {
                 qCritical() << "cutefish_core_v1 window state-change event missing";
                 ok = false;
+            }
+
+            if (state->activation && state->activationName) {
+                auto *activation = static_cast<xdg_activation_v1 *>(
+                    wl_registry_bind(registry, state->activationName, &xdg_activation_v1_interface, 1));
+                xdg_activation_token_v1 *token = xdg_activation_v1_get_activation_token(activation);
+                ActivationState activationState;
+                xdg_activation_token_v1_listener activationListener {};
+                activationListener.done = activationDone;
+                xdg_activation_token_v1_add_listener(token, &activationListener, &activationState);
+                xdg_activation_token_v1_set_app_id(token, "com.cutefish.smoke");
+                xdg_activation_token_v1_set_surface(token, surface);
+                xdg_activation_token_v1_commit(token);
+                if (wl_display_roundtrip(display) < 0 || activationState.token[0] == '\0') {
+                    qCritical() << "xdg_activation token done missing";
+                    ok = false;
+                } else {
+                    xdg_activation_v1_activate(activation, activationState.token, surface);
+                    if (wl_display_roundtrip(display) < 0 || tracker.activatedConfigures < 2) {
+                        qCritical() << "xdg_activation did not produce activated configure"
+                                    << tracker.activatedConfigures;
+                        ok = false;
+                    }
+                }
+                xdg_activation_token_v1_destroy(token);
+                xdg_activation_v1_destroy(activation);
             }
 
             xdg_positioner *positioner = xdg_wm_base_create_positioner(wm);
@@ -486,11 +534,11 @@ int main(int argc, char **argv)
 
     if (!shellOk || !appsOk)
         return 1;
-    if (!shellState.compositor || !shellState.shm || !shellState.seat || !shellState.xdgShell || !shellState.core) {
+    if (!shellState.compositor || !shellState.shm || !shellState.seat || !shellState.xdgShell || !shellState.activation || !shellState.core) {
         qCritical() << "shell socket missing expected globals";
         return 1;
     }
-    if (!appsState.compositor || !appsState.shm || !appsState.seat || !appsState.xdgShell) {
+    if (!appsState.compositor || !appsState.shm || !appsState.seat || !appsState.xdgShell || !appsState.activation) {
         qCritical() << "apps socket missing expected base globals";
         return 1;
     }

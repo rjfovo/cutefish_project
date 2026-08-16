@@ -487,4 +487,13 @@ bool registerXdgShellGlobals(wl_display *display, WaylandServer *server)
                             server, xdgWmBaseBind) != nullptr;
 }
 
+void configureXdgToplevel(Window *window, const QSize &size, const QList<uint32_t> &states)
+{
+    if (!window || !window->xdgSurface() || !window->xdgToplevel())
+        return;
+    wl_client *client = wl_resource_get_client(window->xdgToplevel());
+    sendToplevelConfigure(client, window->xdgSurface(), window->xdgToplevel(),
+                          window, size.width(), size.height(), states);
+}
+
 } // namespace Cutefish
