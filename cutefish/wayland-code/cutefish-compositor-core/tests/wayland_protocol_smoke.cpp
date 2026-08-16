@@ -82,6 +82,13 @@ void dataSourceSend(void *data, wl_data_source *source, const char *mimeType, in
     state->sourceSent = written == payload.size();
 }
 
+void dataDeviceDataOffer(void *data, wl_data_device *device, wl_data_offer *offer)
+{
+    Q_UNUSED(data)
+    Q_UNUSED(device)
+    Q_UNUSED(offer)
+}
+
 void dataDeviceSelection(void *data, wl_data_device *device, wl_data_offer *offer)
 {
     Q_UNUSED(device)
@@ -407,6 +414,53 @@ bool scanSocket(const QString &socketName, RegistryState *state)
         zwp_text_input_manager_v3_destroy(tiManager);
     }
 
+
+    DataState dataState;
+    if (state->dataManager && state->dataManagerName && state->seatName) {
+        auto *dataManager = static_cast<wl_data_device_manager *>(
+            wl_registry_bind(registry, state->dataManagerName, &wl_data_device_manager_interface, 1));
+        auto *dataDevice = wl_data_device_manager_get_data_device(dataManager, seat);
+        wl_data_device_listener deviceListener {};
+        deviceListener.data_offer = dataDeviceDataOffer;
+        deviceListener.selection = dataDeviceSelection;
+        wl_data_device_add_listener(dataDevice, &deviceListener, &dataState);
+        wl_data_source *source = wl_data_device_manager_create_data_source(dataManager);
+        wl_data_source_listener sourceListener {};
+        sourceListener.send = dataSourceSend;
+        wl_data_source_add_listener(source, &sourceListener, &dataState);
+        wl_data_source_offer(source, "text/plain");
+        wl_data_device_set_selection(dataDevice, source, 1);
+        if (wl_display_roundtrip(display) < 0 || !dataState.sourceSent || !dataState.offer) {
+            qCritical() << "clipboard source/selection roundtrip failed"
+                        << dataState.sourceSent << (dataState.offer != nullptr);
+            ok = false;
+        } else {
+            int pipeFds[2] = {-1, -1};
+            if (pipe(pipeFds) != 0) {
+                ok = false;
+            } else {
+                wl_data_offer_receive(dataState.offer, "text/plain", pipeFds[1]);
+                close(pipeFds[1]);
+                wl_display_flush(display);
+                char buf[128] = {};
+                while (true) {
+                    const ssize_t n = read(pipeFds[0], buf, sizeof(buf) - 1);
+                    if (n > 0)
+                        dataState.received.append(buf, static_cast<int>(n));
+                    if (n <= 0)
+                        break;
+                }
+                close(pipeFds[0]);
+                if (dataState.received != QByteArrayLiteral("hello-cutefish-clipboard")) {
+                    qCritical() << "clipboard receive mismatch" << dataState.received;
+                    ok = false;
+                }
+            }
+        }
+        wl_data_source_destroy(source);
+        wl_data_device_destroy(dataDevice);
+        wl_data_device_manager_destroy(dataManager);
+    }
     if (state->xdgShell && state->compositor && state->xdgName && state->compositorName) {
         auto *compositor = static_cast<wl_compositor *>(
             wl_registry_bind(registry, state->compositorName, &wl_compositor_interface, 4));

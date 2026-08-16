@@ -11,7 +11,7 @@
 - 架构变化：selection 缓存进入 core；主选择与剪贴板独立 store
 - 对外接口变化：`wl_data_device_manager`、`zwp_primary_selection_device_manager_v1`
 - 功能差异/裁剪：DnD 尚未实现；`zwlr_data_control_v1` 待 vendored XML
-- 测试与验收：source/device 资源创建协议测试通过；selection offer/receive 端到端仍待修复
+- 测试与验收：source/device 创建、selection offer、异步缓存、receive 回读端到端 PASS
 
 ## 实际修改
 
@@ -24,5 +24,5 @@
 ## 测试与验收
 
 - `wayland_protocol_smoke` 验证 manager/source/device 创建：PASS。
-- 端到端 offer receive 因 server-created object 的 client 映射问题失败，当前禁用该用例，
-  待修复后开启。
+- 修复协议顺序：先 `data_offer`(new_id) → `offer`(mime) → `selection`(object)。
+- 剪贴板写入 → core 缓存 → `receive` 回读 `hello-cutefish-clipboard`：PASS。

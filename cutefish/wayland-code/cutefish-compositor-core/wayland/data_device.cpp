@@ -372,7 +372,8 @@ void DataDeviceManager::setSelectionSource(DeviceData *device, SourceData *sourc
 
 void DataDeviceManager::sendSelectionOffer(DeviceData *device, SourceData *source)
 {
-    // 向设置 selection 的客户端发送 data_offer，复用 source 的 MIME 列表。
+    // 协议顺序：先发送 data_offer(new_id)，再发送 offer(mime) 列表，
+    // 最后发送 selection(object)。缺少 data_offer 会导致客户端无法注册对象。
     wl_client *client = wl_resource_get_client(device->resource);
     const wl_interface *interface = device->primary
         ? &zwp_primary_selection_offer_v1_interface : &wl_data_offer_interface;
@@ -385,19 +386,25 @@ void DataDeviceManager::sendSelectionOffer(DeviceData *device, SourceData *sourc
     data->primary = device->primary;
     data->mimeTypes = source ? source->mimeTypes : QStringList();
 
-    // server 主动创建的对象必须使用 wl_client_new_object 分配 server-range id，
-    // 否则客户端无法把 selection 事件中的 new_id 注册到对象表。
-    wl_resource *offer = wl_client_new_object(client, interface, implementation, data);
+    wl_resource *offer = wl_resource_create(client, interface, kDataVersion, 0);
     if (!offer) {
         delete data;
         return;
     }
     data->resource = offer;
+    wl_resource_set_implementation(offer, implementation, data, destroyData<OfferData>);
 
-    if (device->primary)
+    if (device->primary) {
+        zwp_primary_selection_device_v1_send_data_offer(device->resource, offer);
+        for (const QString &mime : data->mimeTypes)
+            zwp_primary_selection_offer_v1_send_offer(offer, mime.toUtf8().constData());
         zwp_primary_selection_device_v1_send_selection(device->resource, offer);
-    else
+    } else {
+        wl_data_device_send_data_offer(device->resource, offer);
+        for (const QString &mime : data->mimeTypes)
+            wl_data_offer_send_offer(offer, mime.toUtf8().constData());
         wl_data_device_send_selection(device->resource, offer);
+    }
 }
 
 void DataDeviceManager::startSourceRead(SourceData *source)
