@@ -12,9 +12,16 @@ Item {
         color: "#242833"
         opacity: 0.96
     }
-    Label {
+    Column {
         anchors.centerIn: parent
-        text: qsTr("Launcher placeholder")
-        color: "white"
+        spacing: 8
+        Label { text: qsTr("Launcher placeholder"); color: "white" }
+        Repeater {
+            model: OutputModel
+            delegate: Label {
+                text: qsTr("Display %1").arg(model.name)
+                color: "#c0c5ce"
+            }
+        }
     }
 }

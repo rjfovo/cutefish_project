@@ -58,6 +58,46 @@ void Window::setRequestedSize(const QSize &size)
     m_requestedSize = size;
 }
 
+QRect Window::geometry() const
+{
+    return m_geometry;
+}
+
+void Window::setGeometry(const QRect &geometry)
+{
+    m_geometry = geometry;
+}
+
+void Window::moveTo(const QPoint &position)
+{
+    m_geometry.moveTopLeft(position);
+}
+
+void Window::resize(const QSize &size)
+{
+    m_geometry.setSize(size);
+}
+
+bool Window::interactiveMove() const
+{
+    return m_interactiveMove;
+}
+
+bool Window::interactiveResize() const
+{
+    return m_interactiveResize;
+}
+
+void Window::setInteractiveMove(bool enabled)
+{
+    m_interactiveMove = enabled;
+}
+
+void Window::setInteractiveResize(bool enabled)
+{
+    m_interactiveResize = enabled;
+}
+
 Window::State Window::state() const
 {
     return m_state;

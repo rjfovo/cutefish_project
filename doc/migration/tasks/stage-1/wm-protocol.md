@@ -46,3 +46,11 @@
 - 对外接口变化：`cutefish_core_v1` v2 窗口事件
 - 功能差异/裁剪：move/resize 交互未完成
 - 测试与验收：协议冒烟测试通过；交互未验收
+
+## 追加：move/resize 与 z-order 模型
+
+- Window 增加 geometry、interactiveMove/interactiveResize。
+- Workspace 增加 windowAt、raiseWindow、beginMove/beginResize/updateInteraction/endInteraction。
+- xdg_toplevel move/resize 请求进入交互状态；libinput 指针按下选择/激活窗口，
+  释放结束交互。
+- 协议冒烟测试覆盖 move/resize 请求：PASS。

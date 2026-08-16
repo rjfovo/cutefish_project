@@ -25,6 +25,12 @@ public:
     Window *windowForToplevel(wl_resource *toplevel) const;
     Window *activeWindow() const;
     void setActiveWindow(Window *window);
+    Window *windowAt(const QPointF &position) const;
+    void raiseWindow(Window *window);
+    void beginMove(Window *window);
+    void beginResize(Window *window, uint32_t edges);
+    void updateInteraction(const QPointF &position);
+    void endInteraction();
 
     QList<Window *> windows() const;
     QList<Window *> windowsInStackingOrder() const;

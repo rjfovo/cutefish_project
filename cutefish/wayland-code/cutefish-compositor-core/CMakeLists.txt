@@ -68,6 +68,25 @@ set_target_properties(cutefish-xdg-shell-protocol PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+# wp_primary_selection_unstable_v1 protocol code.
+set(PRIMARY_SELECTION_XML "${WAYLAND_PROTOCOLS_DATADIR}/unstable/primary-selection/primary-selection-unstable-v1.xml")
+set(PRIMARY_SELECTION_C "${CMAKE_CURRENT_BINARY_DIR}/primary-selection-unstable-v1-protocol.c")
+set(PRIMARY_SELECTION_SERVER_H "${CMAKE_CURRENT_BINARY_DIR}/wayland-primary-selection-unstable-v1-server-protocol.h")
+
+add_custom_command(
+    OUTPUT "${PRIMARY_SELECTION_C}" "${PRIMARY_SELECTION_SERVER_H}"
+    COMMAND "${WAYLAND_SCANNER}" private-code "${PRIMARY_SELECTION_XML}" "${PRIMARY_SELECTION_C}"
+    COMMAND "${WAYLAND_SCANNER}" server-header "${PRIMARY_SELECTION_XML}" "${PRIMARY_SELECTION_SERVER_H}"
+    DEPENDS "${PRIMARY_SELECTION_XML}"
+    VERBATIM
+)
+
+add_library(cutefish-primary-selection-protocol STATIC "${PRIMARY_SELECTION_C}")
+target_include_directories(cutefish-primary-selection-protocol PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+set_target_properties(cutefish-primary-selection-protocol PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
 # xdg-activation-v1 (staging) protocol code.
 set(XDG_ACTIVATION_XML "${WAYLAND_PROTOCOLS_DATADIR}/staging/xdg-activation/xdg-activation-v1.xml")
 set(XDG_ACTIVATION_C "${CMAKE_CURRENT_BINARY_DIR}/xdg-activation-v1-protocol.c")
@@ -99,6 +118,7 @@ add_executable(cutefish-compositor-core
     lifecycle/state_machine.cpp
     wm/window.cpp
     wm/workspace.cpp
+    wayland/data_device.cpp
     wayland/seat.cpp
     wayland/server.cpp
     wayland/xdg_activation.cpp
@@ -119,6 +139,7 @@ target_link_libraries(cutefish-compositor-core PRIVATE
     PkgConfig::UDEV
     PkgConfig::XKBCOMMON
     cutefish-core-v1-protocol
+    cutefish-primary-selection-protocol
     cutefish-xdg-shell-protocol
     cutefish-xdg-activation-protocol
 )

@@ -30,12 +30,14 @@ struct RegistryState {
     bool seat = false;
     bool xdgShell = false;
     bool activation = false;
+    bool dataManager = false;
     bool core = false;
     uint32_t coreName = 0;
     uint32_t compositorName = 0;
     uint32_t xdgName = 0;
     uint32_t seatName = 0;
     uint32_t activationName = 0;
+    uint32_t dataManagerName = 0;
 };
 
 struct ToplevelState {
@@ -48,6 +50,42 @@ struct ToplevelState {
 struct ActivationState {
     char token[128] = {};
 };
+
+struct DataState {
+    wl_data_offer *offer = nullptr;
+    bool sourceSent = false;
+    QByteArray received;
+};
+
+void dataSourceSend(void *data, wl_data_source *source, const char *mimeType, int32_t fd)
+{
+    Q_UNUSED(source)
+    auto *state = static_cast<DataState *>(data);
+    if (qstrcmp(mimeType, "text/plain") != 0) {
+        close(fd);
+        return;
+    }
+    const QByteArray payload = QByteArrayLiteral("hello-cutefish-clipboard");
+    size_t written = 0;
+    while (written < static_cast<size_t>(payload.size())) {
+        const ssize_t n = write(fd, payload.constData() + written, payload.size() - written);
+        if (n < 0 && errno == EAGAIN)
+            continue;
+        if (n <= 0)
+            break;
+        written += static_cast<size_t>(n);
+    }
+    close(fd);
+    state->sourceSent = written == payload.size();
+}
+
+void dataDeviceSelection(void *data, wl_data_device *device, wl_data_offer *offer)
+{
+    Q_UNUSED(device)
+    auto *state = static_cast<DataState *>(data);
+    state->offer = offer;
+    wl_data_offer_accept(offer, 0, "text/plain");
+}
 
 struct CoreWindowState {
     int windowCount = 0;
@@ -247,6 +285,9 @@ void registryGlobal(void *data, wl_registry *registry, uint32_t name,
     } else if (std::strcmp(interface, "xdg_activation_v1") == 0) {
         state->activation = true;
         state->activationName = name;
+    } else if (std::strcmp(interface, wl_data_device_manager_interface.name) == 0) {
+        state->dataManager = true;
+        state->dataManagerName = name;
     } else if (std::strcmp(interface, cutefish_core_v1_interface.name) == 0) {
         state->core = true;
         state->coreName = name;
@@ -375,6 +416,12 @@ bool scanSocket(const QString &socketName, RegistryState *state)
             if (!inputState.pointerEnter || !inputState.keyboardEnter || !inputState.modifiers) {
                 qCritical() << "seat focus enter/modifiers missing"
                             << inputState.pointerEnter << inputState.keyboardEnter << inputState.modifiers;
+                ok = false;
+            }
+            xdg_toplevel_move(toplevel, seat, 1);
+            xdg_toplevel_resize(toplevel, seat, 1, XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT);
+            if (wl_display_roundtrip(display) < 0) {
+                qCritical() << "xdg move/resize request roundtrip failed";
                 ok = false;
             }
             xdg_toplevel_set_maximized(toplevel);

@@ -444,7 +444,7 @@ void coreBind(wl_client *client, void *data, uint32_t version, uint32_t id)
     qInfo() << "cutefish_core_v1 bound" << "pid" << pid << "uid" << uid << "gid" << gid;
 }
 
-void processLibinputEvents(LibinputBackend *backend, Seat *seat)
+void processLibinputEvents(WaylandServer *server, LibinputBackend *backend, Seat *seat)
 {
     if (!backend || !seat || !backend->context())
         return;
@@ -462,13 +462,21 @@ void processLibinputEvents(LibinputBackend *backend, Seat *seat)
             auto *pointerEvent = libinput_event_get_pointer_event(event);
             seat->pointerMotion(libinput_event_pointer_get_dx(pointerEvent),
                                 libinput_event_pointer_get_dy(pointerEvent));
+            server->workspace()->updateInteraction(seat->pointerPosition());
             break;
         }
         case LIBINPUT_EVENT_POINTER_BUTTON: {
             auto *pointerEvent = libinput_event_get_pointer_event(event);
-            const uint32_t state = libinput_event_pointer_get_button_state(pointerEvent) == LIBINPUT_BUTTON_STATE_PRESSED
-                ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED;
+            const bool pressed = libinput_event_pointer_get_button_state(pointerEvent) == LIBINPUT_BUTTON_STATE_PRESSED;
+            const uint32_t state = pressed ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED;
             seat->pointerButton(libinput_event_pointer_get_button(pointerEvent), state);
+            if (pressed) {
+                Window *window = server->workspace()->windowAt(seat->pointerPosition());
+                if (window)
+                    server->workspace()->setActiveWindow(window);
+            } else {
+                server->workspace()->endInteraction();
+            }
             break;
         }
         case LIBINPUT_EVENT_POINTER_AXIS: {
@@ -524,6 +532,7 @@ WaylandServer::WaylandServer(CoreState *state, QObject *parent)
     , m_workspace(new Workspace(this))
     , m_seat(new Seat(this))
     , m_activation(new XdgActivation(this, this))
+    , m_dataDevices(new DataDeviceManager(this))
 {
     s_instance = this;
     connect(m_workspace, &Workspace::activeWindowChanged, this, [this](Window *window) {
@@ -566,6 +575,8 @@ bool WaylandServer::registerGlobals(wl_display *display, bool trustedShellDispla
     if (!m_seat->registerDisplay(display))
         return false;
     if (!m_activation->registerDisplay(display))
+        return false;
+    if (!m_dataDevices->registerDisplay(display))
         return false;
     if (!registerXdgShellGlobals(display, this))
         return false;
@@ -657,21 +668,31 @@ int WaylandServer::run()
             break;
         }
         if (shellEvents == 0 && appsEvents == 0) {
-            pollfd fds[4] = {
+            QList<pollfd> fds = {
                 { shellFd, POLLIN, 0 },
                 { appsFd, POLLIN, 0 },
                 { terminateFd, POLLIN, 0 },
-                { inputFd, POLLIN, 0 },
             };
-            const nfds_t count = inputFd >= 0 ? 4 : 3;
-            const int prc = poll(fds, count, 100);
+            if (inputFd >= 0)
+                fds.append({ inputFd, POLLIN, 0 });
+            const QList<int> dataFds = m_dataDevices->pendingReadFds();
+            for (int dataFd : dataFds)
+                fds.append({ dataFd, POLLIN, 0 });
+
+            const int prc = poll(fds.data(), static_cast<nfds_t>(fds.size()), 100);
             if (prc < 0 && errno != EINTR)
                 break;
             if (prc > 0 && (fds[2].revents & POLLIN))
                 break;
             if (prc > 0 && inputFd >= 0 && (fds[3].revents & POLLIN) && libinput) {
                 libinput->dispatch();
-                processLibinputEvents(libinput, m_seat);
+                processLibinputEvents(this, libinput, m_seat);
+            }
+            if (prc > 0) {
+                for (int i = 4; i < fds.size(); ++i) {
+                    if (fds[i].revents & (POLLIN | POLLHUP | POLLERR))
+                        m_dataDevices->dispatchPendingRead(fds[i].fd);
+                }
             }
         }
     }
@@ -716,6 +737,11 @@ Seat *WaylandServer::seat() const
 XdgActivation *WaylandServer::activation() const
 {
     return m_activation;
+}
+
+DataDeviceManager *WaylandServer::dataDevices() const
+{
+    return m_dataDevices;
 }
 
 void WaylandServer::setInputBackend(InputBackend *backend)

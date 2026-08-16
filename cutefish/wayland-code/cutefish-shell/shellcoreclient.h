@@ -56,6 +56,8 @@ public:
 
     QVector<Output> outputs() const;
     QVector<WindowInfo> windows() const;
+    QObject *outputModel() const;
+    QObject *windowModel() const;
 
     void setCoreProxy(cutefish_core_v1 *core);
     void updateOutput(const Output &output);
@@ -81,4 +83,6 @@ private:
     int m_mode = 1;
     QVector<Output> m_outputs;
     QVector<WindowInfo> m_windows;
+    class OutputListModel *m_outputModel = nullptr;
+    class WindowListModel *m_windowModel = nullptr;
 };

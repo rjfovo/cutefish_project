@@ -13,6 +13,8 @@ Window *Workspace::createWindow(wl_resource *surface, wl_resource *xdgSurface, w
 {
     auto *window = new Window(surface, xdgSurface, xdgToplevel, this);
     window->setId(++m_nextWindowId);
+    const int offset = static_cast<int>(m_windows.size()) * 24;
+    window->setGeometry(QRect(32 + offset, 32 + offset, 640, 480));
     connect(window, &Window::stateChanged, this, &Workspace::handleWindowStateChanged);
     m_windows.prepend(window);
     emit windowAdded(window);
@@ -83,6 +85,72 @@ void Workspace::handleWindowStateChanged()
     auto *window = qobject_cast<Window *>(sender());
     if (window)
         emit windowStateChanged(window);
+}
+
+Window *Workspace::windowAt(const QPointF &position) const
+{
+    const auto windows = windowsInStackingOrder();
+    for (Window *window : windows) {
+        if (window->geometry().contains(position.toPoint()))
+            return window;
+    }
+    return activeWindow();
+}
+
+void Workspace::raiseWindow(Window *window)
+{
+    if (!window)
+        return;
+    m_windows.removeAll(window);
+    m_windows.prepend(window);
+}
+
+void Workspace::beginMove(Window *window)
+{
+    if (!window)
+        return;
+    endInteraction();
+    raiseWindow(window);
+    setActiveWindow(window);
+    window->setInteractiveMove(true);
+}
+
+void Workspace::beginResize(Window *window, uint32_t edges)
+{
+    Q_UNUSED(edges)
+    if (!window)
+        return;
+    endInteraction();
+    raiseWindow(window);
+    setActiveWindow(window);
+    window->setInteractiveResize(true);
+}
+
+void Workspace::updateInteraction(const QPointF &position)
+{
+    Window *window = activeWindow();
+    if (!window)
+        return;
+    if (window->interactiveMove()) {
+        QRect geometry = window->geometry();
+        geometry.moveCenter(position.toPoint());
+        window->setGeometry(geometry);
+    } else if (window->interactiveResize()) {
+        QRect geometry = window->geometry();
+        geometry.setBottomRight(position.toPoint());
+        if (geometry.width() < 160 || geometry.height() < 120)
+            return;
+        window->setGeometry(geometry);
+        window->setRequestedSize(geometry.size());
+    }
+}
+
+void Workspace::endInteraction()
+{
+    for (Window *window : std::as_const(m_windows)) {
+        window->setInteractiveMove(false);
+        window->setInteractiveResize(false);
+    }
 }
 
 QList<Window *> Workspace::windowsInStackingOrder() const

@@ -1,4 +1,6 @@
 #include "shellcoreclient.h"
+#include "outputlistmodel.h"
+#include "windowlistmodel.h"
 
 #include <QDebug>
 #include <QSocketNotifier>
@@ -109,6 +111,8 @@ const struct cutefish_core_v1_listener coreListener = {
 
 ShellCoreClient::ShellCoreClient(QObject *parent)
     : QObject(parent)
+    , m_outputModel(new OutputListModel(this))
+    , m_windowModel(new WindowListModel(this))
 {
 }
 
@@ -257,6 +261,16 @@ QVector<ShellCoreClient::WindowInfo> ShellCoreClient::windows() const
     return m_windows;
 }
 
+QObject *ShellCoreClient::outputModel() const
+{
+    return m_outputModel;
+}
+
+QObject *ShellCoreClient::windowModel() const
+{
+    return m_windowModel;
+}
+
 void ShellCoreClient::setCoreProxy(cutefish_core_v1 *core)
 {
     m_core = core;
@@ -267,11 +281,13 @@ void ShellCoreClient::updateOutput(const Output &output)
     for (auto &existing : m_outputs) {
         if (existing.name == output.name) {
             existing = output;
+            m_outputModel->setOutputs(m_outputs);
             emit outputsChanged();
             return;
         }
     }
     m_outputs.append(output);
+    m_outputModel->setOutputs(m_outputs);
     emit outputsChanged();
 }
 
@@ -280,11 +296,13 @@ void ShellCoreClient::updateWindow(const WindowInfo &window)
     for (auto &existing : m_windows) {
         if (existing.id == window.id) {
             existing = window;
+            m_windowModel->setWindows(m_windows);
             emit windowsChanged();
             return;
         }
     }
     m_windows.append(window);
+    m_windowModel->setWindows(m_windows);
     emit windowsChanged();
 }
 
@@ -294,6 +312,7 @@ void ShellCoreClient::updateWindowState(uint32_t id, uint32_t state, bool activa
         if (window.id == id) {
             window.state = state;
             window.activated = activated;
+            m_windowModel->setWindows(m_windows);
             emit windowsChanged();
             return;
         }
@@ -305,6 +324,7 @@ void ShellCoreClient::removeWindow(uint32_t id)
     for (int i = 0; i < m_windows.size(); ++i) {
         if (m_windows.at(i).id == id) {
             m_windows.removeAt(i);
+            m_windowModel->setWindows(m_windows);
             emit windowsChanged();
             return;
         }

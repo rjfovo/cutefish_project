@@ -309,19 +309,22 @@ void xdgToplevelShowWindowMenu(wl_client *client, wl_resource *resource, wl_reso
 void xdgToplevelMove(wl_client *client, wl_resource *resource, wl_resource *seat, uint32_t serial)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
     Q_UNUSED(seat)
     Q_UNUSED(serial)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (data && data->server && data->window)
+        data->server->workspace()->beginMove(data->window);
 }
 
 void xdgToplevelResize(wl_client *client, wl_resource *resource, wl_resource *seat,
                        uint32_t serial, uint32_t edges)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
     Q_UNUSED(seat)
     Q_UNUSED(serial)
-    Q_UNUSED(edges)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (data && data->server && data->window)
+        data->server->workspace()->beginResize(data->window, edges);
 }
 
 QSize workspaceSize(WaylandServer *server)

@@ -7,6 +7,7 @@
 
 #include <QObject>
 #include <QPoint>
+#include <QRect>
 #include <QSize>
 #include <QString>
 
@@ -41,6 +42,16 @@ public:
     QSize requestedSize() const;
     void setRequestedSize(const QSize &size);
 
+    QRect geometry() const;
+    void setGeometry(const QRect &geometry);
+    void moveTo(const QPoint &position);
+    void resize(const QSize &size);
+
+    bool interactiveMove() const;
+    bool interactiveResize() const;
+    void setInteractiveMove(bool enabled);
+    void setInteractiveResize(bool enabled);
+
     State state() const;
     void setState(State state);
 
@@ -65,6 +76,9 @@ private:
     QString m_title;
     QString m_appId;
     QSize m_requestedSize;
+    QRect m_geometry;
+    bool m_interactiveMove = false;
+    bool m_interactiveResize = false;
     State m_state = State::Normal;
     bool m_activated = false;
     uint32_t m_lastConfigureSerial = 0;

@@ -58,6 +58,10 @@ qt_add_executable(cutefish-shell
     shellclient.h
     shellcoreclient.cpp
     shellcoreclient.h
+    outputlistmodel.cpp
+    outputlistmodel.h
+    windowlistmodel.cpp
+    windowlistmodel.h
     displayservice.cpp
     displayservice.h
     ${DBUS_SOURCES}

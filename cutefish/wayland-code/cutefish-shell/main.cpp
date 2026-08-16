@@ -112,6 +112,9 @@ int main(int argc, char **argv)
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("ShellClient"), &shellClient);
+    engine.rootContext()->setContextProperty(QStringLiteral("OutputModel"), coreClient.outputModel());
+    engine.rootContext()->setContextProperty(QStringLiteral("WindowModel"), coreClient.windowModel());
+    engine.rootContext()->setContextProperty(QStringLiteral("CoreClient"), &coreClient);
     engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
     if (engine.rootObjects().isEmpty())
         return 1;
