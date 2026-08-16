@@ -1,0 +1,7 @@
+# CutefishOS Wayland-only project build manifest.
+# Format: project[:build-type] where build-type is auto|cmake|dpkg.
+# All sources must live under cutefish/wayland-code/<project>.
+cutefish-compositor-core:auto
+cutefish-shell:auto
+cutefish-installer:auto
+core:auto
