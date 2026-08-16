@@ -533,6 +533,7 @@ WaylandServer::WaylandServer(CoreState *state, QObject *parent)
     , m_seat(new Seat(this))
     , m_activation(new XdgActivation(this, this))
     , m_dataDevices(new DataDeviceManager(this))
+    , m_textInput(new TextInputManager(this, this))
 {
     s_instance = this;
     connect(m_workspace, &Workspace::activeWindowChanged, this, [this](Window *window) {
@@ -577,6 +578,8 @@ bool WaylandServer::registerGlobals(wl_display *display, bool trustedShellDispla
     if (!m_activation->registerDisplay(display))
         return false;
     if (!m_dataDevices->registerDisplay(display))
+        return false;
+    if (!m_textInput->registerDisplay(display))
         return false;
     if (!registerXdgShellGlobals(display, this))
         return false;
@@ -742,6 +745,11 @@ XdgActivation *WaylandServer::activation() const
 DataDeviceManager *WaylandServer::dataDevices() const
 {
     return m_dataDevices;
+}
+
+TextInputManager *WaylandServer::textInput() const
+{
+    return m_textInput;
 }
 
 void WaylandServer::setInputBackend(InputBackend *backend)

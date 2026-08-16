@@ -68,6 +68,25 @@ set_target_properties(cutefish-xdg-shell-protocol PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+# zwp_text_input_v3 protocol code.
+set(TEXT_INPUT_XML "${WAYLAND_PROTOCOLS_DATADIR}/unstable/text-input/text-input-unstable-v3.xml")
+set(TEXT_INPUT_C "${CMAKE_CURRENT_BINARY_DIR}/text-input-unstable-v3-protocol.c")
+set(TEXT_INPUT_SERVER_H "${CMAKE_CURRENT_BINARY_DIR}/text-input-unstable-v3-server-protocol.h")
+set(TEXT_INPUT_CLIENT_H "${CMAKE_CURRENT_BINARY_DIR}/text-input-unstable-v3-client-protocol.h")
+
+add_custom_command(
+    OUTPUT "${TEXT_INPUT_C}" "${TEXT_INPUT_SERVER_H}" "${TEXT_INPUT_CLIENT_H}"
+    COMMAND "${WAYLAND_SCANNER}" private-code "${TEXT_INPUT_XML}" "${TEXT_INPUT_C}"
+    COMMAND "${WAYLAND_SCANNER}" server-header "${TEXT_INPUT_XML}" "${TEXT_INPUT_SERVER_H}"
+    COMMAND "${WAYLAND_SCANNER}" client-header "${TEXT_INPUT_XML}" "${TEXT_INPUT_CLIENT_H}"
+    DEPENDS "${TEXT_INPUT_XML}"
+    VERBATIM
+)
+
+add_library(cutefish-text-input-protocol STATIC "${TEXT_INPUT_C}")
+target_include_directories(cutefish-text-input-protocol PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+set_target_properties(cutefish-text-input-protocol PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # wp_primary_selection_unstable_v1 protocol code.
 set(PRIMARY_SELECTION_XML "${WAYLAND_PROTOCOLS_DATADIR}/unstable/primary-selection/primary-selection-unstable-v1.xml")
 set(PRIMARY_SELECTION_C "${CMAKE_CURRENT_BINARY_DIR}/primary-selection-unstable-v1-protocol.c")
@@ -121,6 +140,7 @@ add_executable(cutefish-compositor-core
     wayland/data_device.cpp
     wayland/seat.cpp
     wayland/server.cpp
+    wayland/text_input.cpp
     wayland/xdg_activation.cpp
     wayland/xdg_shell.cpp
 )
@@ -140,6 +160,7 @@ target_link_libraries(cutefish-compositor-core PRIVATE
     PkgConfig::XKBCOMMON
     cutefish-core-v1-protocol
     cutefish-primary-selection-protocol
+    cutefish-text-input-protocol
     cutefish-xdg-shell-protocol
     cutefish-xdg-activation-protocol
 )
@@ -161,6 +182,7 @@ if(BUILD_TESTING)
         cutefish-core-v1-protocol
         cutefish-xdg-shell-protocol
         cutefish-xdg-activation-protocol
+        cutefish-text-input-protocol
     )
     add_test(
         NAME wayland_protocol_smoke

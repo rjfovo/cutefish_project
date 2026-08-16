@@ -4,6 +4,7 @@
 
 #include "cutefish-core-v1-client-protocol.h"
 #include "xdg-activation-v1-client-protocol.h"
+#include "text-input-unstable-v3-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
 #include <QCoreApplication>
@@ -31,6 +32,7 @@ struct RegistryState {
     bool xdgShell = false;
     bool activation = false;
     bool dataManager = false;
+    bool textInput = false;
     bool core = false;
     uint32_t coreName = 0;
     uint32_t compositorName = 0;
@@ -38,6 +40,7 @@ struct RegistryState {
     uint32_t seatName = 0;
     uint32_t activationName = 0;
     uint32_t dataManagerName = 0;
+    uint32_t textInputName = 0;
 };
 
 struct ToplevelState {
@@ -288,6 +291,9 @@ void registryGlobal(void *data, wl_registry *registry, uint32_t name,
     } else if (std::strcmp(interface, wl_data_device_manager_interface.name) == 0) {
         state->dataManager = true;
         state->dataManagerName = name;
+    } else if (std::strcmp(interface, "zwp_text_input_manager_v3") == 0) {
+        state->textInput = true;
+        state->textInputName = name;
     } else if (std::strcmp(interface, cutefish_core_v1_interface.name) == 0) {
         state->core = true;
         state->coreName = name;
@@ -378,6 +384,27 @@ bool scanSocket(const QString &socketName, RegistryState *state)
         keyboardListener.enter = keyboardEnter;
         keyboardListener.modifiers = keyboardModifiers;
         wl_keyboard_add_listener(keyboard, &keyboardListener, &inputState);
+    }
+
+    if (state->textInput && state->textInputName && state->seatName) {
+        auto *tiManager = static_cast<zwp_text_input_manager_v3 *>(
+            wl_registry_bind(registry, state->textInputName, &zwp_text_input_manager_v3_interface, 1));
+        zwp_text_input_v3 *ti = zwp_text_input_manager_v3_get_text_input(tiManager, seat);
+        int doneCount = 0;
+        zwp_text_input_v3_listener tiListener {};
+        tiListener.done = [](void *data, zwp_text_input_v3 *textInput, uint32_t serial) {
+            Q_UNUSED(textInput) Q_UNUSED(serial)
+            (*static_cast<int *>(data))++;
+        };
+        zwp_text_input_v3_add_listener(ti, &tiListener, &doneCount);
+        zwp_text_input_v3_enable(ti);
+        if (wl_display_roundtrip(display) < 0 || doneCount < 1) {
+            qCritical() << "text-input enable/done missing" << doneCount;
+            ok = false;
+        }
+        zwp_text_input_v3_disable(ti);
+        zwp_text_input_v3_destroy(ti);
+        zwp_text_input_manager_v3_destroy(tiManager);
     }
 
     if (state->xdgShell && state->compositor && state->xdgName && state->compositorName) {

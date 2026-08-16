@@ -64,3 +64,12 @@
 - 当前执行策略：stage-1 继续开发；KmsBackend 默认只枚举和分配 GBM，不申请 DRM master；
   模式设置/上屏路径必须显式设置 `CUTEFISH_KMS_ALLOW_MODESET=1` 且只能在批准的
   专用测试机/维护窗口执行。
+
+## CONFLICT-007 zwp_input_method_v2 XML 与键盘 grab 设计缺失
+
+- 涉及：`development-key-points.md` P0 要求实现 `zwp_input_method_v2`；
+  当前 Debian 13 `wayland-protocols` 仅提供 `input-method-unstable-v1.xml`。
+- 停止点：不能以 v1 冒充 v2，也不能在未定义键盘 grab 状态机前实现 P0。
+- 等待决策：批准从上游 vendored `input-method-unstable-v2.xml`，并确认
+  fcitx5/ibus 键盘 grab、候选窗 surface、锁屏停止输入的状态机设计。
+- 状态：未解决。
