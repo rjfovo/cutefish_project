@@ -63,6 +63,11 @@ void VirtualBackend::setCursor(const QImage &image, const QPoint &hotspot)
     qInfo() << "VirtualBackend cursor" << image.size() << hotspot;
 }
 
+Buffer *VirtualBackend::createBuffer(const QSize &size)
+{
+    return new VirtualBuffer(size);
+}
+
 void VirtualBackend::present(OutputInfo *output, Buffer *buffer)
 {
     Q_UNUSED(output)

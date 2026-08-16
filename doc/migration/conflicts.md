@@ -47,10 +47,20 @@
   旧 `cutefish/code/core` 只读，仅作审计参考。
 - 状态：已解决。
 
-## CONFLICT-006 KMS Spike 真机验证硬件未批准
+## CONFLICT-006 KMS Spike 真机验证硬件边界
 
 - 涉及：`cutefish-dedicated-compositor-architecture.md` §18 要求 KMS 相关 Spike 在
-  AMD/Intel 真机复验；本任务测试服务器禁止打开 /dev/dri、/dev/input 和运行 KmsBackend。
+  AMD/Intel 真机复验；原任务测试服务器边界禁止 DRM/input 验证。
 - 停止点：stage-1 KmsBackend 验证。
-- 等待决策：需要批准专用硬件验证环境或明确放宽为镜像验证策略。
-- 状态：未解决（stage-1 前置阻塞；不影响 stage-0 VirtualBackend 工作）。
+- 决策：用户已授权“去测试环境做真机验证”。2026-08-16 对 192.168.118.132 执行了
+  只读审计和安全探针：
+  - 服务器为 VMware 虚拟 GPU（vendor 0x15ad/device 0x0405），宿主机 CPU 为
+    AMD Ryzen 7 2700X；不是物理 AMD/Intel GPU。
+  - `drmModeGetResources` 探针通过：8 CRTC/8 connector，1 个 connected connector。
+  - GBM 在 renderD128 上创建 1920x1080 XRGB8888 scanout/rendering BO 通过。
+  - 未执行 drmSetMaster、modeset、page flip、input grab，未影响当前 SDDM/Xorg/KWin 会话。
+- 状态：部分解决。测试服务器可继续执行非破坏性 KMS/GBM/libinput 能力探针；
+  方案要求的 AMD/Intel 物理 GPU 模式设置/上屏复验仍待设备或明确放宽策略。
+- 当前执行策略：stage-1 继续开发；KmsBackend 默认只枚举和分配 GBM，不申请 DRM master；
+  模式设置/上屏路径必须显式设置 `CUTEFISH_KMS_ALLOW_MODESET=1` 且只能在批准的
+  专用测试机/维护窗口执行。

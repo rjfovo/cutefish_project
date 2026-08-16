@@ -14,6 +14,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui DBus)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(WAYLAND_SERVER REQUIRED IMPORTED_TARGET wayland-server>=1.20)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client>=1.20)
+pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
+pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm)
+pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
+pkg_check_modules(UDEV REQUIRED IMPORTED_TARGET libudev)
 
 find_program(WAYLAND_SCANNER NAMES wayland-scanner REQUIRED)
 
@@ -64,6 +68,9 @@ set_target_properties(cutefish-xdg-shell-protocol PROPERTIES
 add_executable(cutefish-compositor-core
     main.cpp
     backend/virtual_backend.cpp
+    backend/kms_backend.cpp
+    input/libinput_backend.cpp
+    session/logind_session.cpp
     core_state.cpp
     lifecycle/state_machine.cpp
     wayland/server.cpp
@@ -78,6 +85,10 @@ target_link_libraries(cutefish-compositor-core PRIVATE
     Qt6::Gui
     Qt6::DBus
     PkgConfig::WAYLAND_SERVER
+    PkgConfig::DRM
+    PkgConfig::GBM
+    PkgConfig::LIBINPUT
+    PkgConfig::UDEV
     cutefish-core-v1-protocol
     cutefish-xdg-shell-protocol
 )

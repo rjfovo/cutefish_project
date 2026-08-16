@@ -21,6 +21,7 @@ public:
     bool setMode(const QString &name, const QSize &mode) override;
     bool setDpms(const QString &name, bool on) override;
     void setCursor(const QImage &image, const QPoint &hotspot) override;
+    Buffer *createBuffer(const QSize &size) override;
     void present(OutputInfo *output, Buffer *buffer) override;
 
 private:

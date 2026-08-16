@@ -1,3 +1,4 @@
+#include "backend/kms_backend.h"
 #include "backend/virtual_backend.h"
 #include "core_state.h"
 #include "wayland/server.h"
@@ -36,7 +37,9 @@ int main(int argc, char **argv)
     QCommandLineOption virtualOption(QStringLiteral("virtual"),
                                      QStringLiteral("Use the safe VirtualBackend (default)"));
     QCommandLineOption kmsOption(QStringLiteral("kms"),
-                                 QStringLiteral("Reserved for stage-1 KmsBackend; refuses to run in stage-0"));
+                                 QStringLiteral("Run the real KmsBackend. Safe by default: no DRM master/modeset unless explicitly authorized"));
+    QCommandLineOption kmsModesetOption(QStringLiteral("kms-modeset"),
+                                        QStringLiteral("Authorize DRM master and modeset path. Requires CUTEFISH_KMS_ALLOW_MODESET=1"));
     QCommandLineOption prefixOption(QStringLiteral("socket-prefix"),
                                     QStringLiteral("Socket name prefix"),
                                     QStringLiteral("prefix"),
@@ -46,12 +49,13 @@ int main(int argc, char **argv)
                                      QStringLiteral("dir"));
     parser.addOption(virtualOption);
     parser.addOption(kmsOption);
+    parser.addOption(kmsModesetOption);
     parser.addOption(prefixOption);
     parser.addOption(runtimeOption);
     parser.process(app);
 
-    if (parser.isSet(kmsOption)) {
-        qCritical() << "KmsBackend is not implemented in stage-0; refusing to touch DRM devices";
+    if (parser.isSet(kmsModesetOption) && !qEnvironmentVariableIsSet("CUTEFISH_KMS_ALLOW_MODESET")) {
+        qCritical() << "KmsBackend modeset path requires CUTEFISH_KMS_ALLOW_MODESET=1";
         return 2;
     }
 
@@ -72,12 +76,26 @@ int main(int argc, char **argv)
     std::signal(SIGTERM, terminateHandler);
 
     Cutefish::CoreState state;
-    Cutefish::VirtualBackend backend;
-    if (!backend.initialize()) {
+    Cutefish::VirtualBackend virtualBackend;
+    Cutefish::KmsBackend kmsBackend({QStringLiteral("/dev/dri/card0"),
+                                     QStringLiteral("/dev/dri/renderD128"),
+                                     parser.isSet(kmsModesetOption)});
+    Cutefish::DisplayBackend *backend = &virtualBackend;
+    if (parser.isSet(kmsOption)) {
+        backend = &kmsBackend;
+        if (!kmsBackend.initialize()) {
+            qCritical() << "KmsBackend initialization failed";
+            return 1;
+        }
+        if (!kmsBackend.drmMaster() && kmsBackend.modesetAllowed()) {
+            qCritical() << "KmsBackend requested modeset but did not acquire DRM master";
+            return 1;
+        }
+    } else if (!virtualBackend.initialize()) {
         qCritical() << "VirtualBackend initialization failed";
         return 1;
     }
-    state.setDisplayBackend(&backend);
+    state.setDisplayBackend(backend);
 
     Cutefish::WaylandServer server(&state);
     if (!server.start(runtimeDir, appsSocket, shellSocket)) {
@@ -87,6 +105,6 @@ int main(int argc, char **argv)
 
     const int rc = server.run();
     qInfo() << "compositor core stopped, rc" << rc;
-    backend.shutdown();
+    backend->shutdown();
     return rc == 0 ? 0 : 1;
 }

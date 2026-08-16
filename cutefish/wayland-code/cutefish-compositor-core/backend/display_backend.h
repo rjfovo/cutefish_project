@@ -31,6 +31,7 @@ public:
     virtual bool setMode(const QString &name, const QSize &mode) = 0;
     virtual bool setDpms(const QString &name, bool on) = 0;
     virtual void setCursor(const QImage &image, const QPoint &hotspot) = 0;
+    virtual Buffer *createBuffer(const QSize &size) = 0;
     virtual void present(OutputInfo *output, Buffer *buffer) = 0;
 };
 

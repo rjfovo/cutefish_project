@@ -6,16 +6,17 @@
 
 ## 总进度
 
-- 当前阶段：stage-0 已验收通过；stage-1 未开始，等待 CONFLICT-006 KMS 真机复验硬件批准
-- 当前任务：stage-1 前置条件确认；安装器专用化继续并行推进
-- 阻塞项：CONFLICT-006（stage-1 KMS Spike 需要 AMD/Intel 真机，测试服务器禁止 DRM/input 验证）
+- 当前阶段：stage-1（进行中）
+- 当前任务：KmsBackend/LibinputBackend/LogindSession 工程实现与测试服务器安全探针
+- 阻塞项：CONFLICT-006 部分解决；VMware 虚拟 GPU 探针通过，AMD/Intel 物理 GPU
+  模式设置/上屏复验仍待设备或明确放宽策略
 
 ## 当前状态摘要
 
 | 工作流 | 状态 | 说明 |
 |---|---|---|
 | stage-0 Wayland-only baseline | 验收通过 | 见 `tasks/stage-0/*.md` |
-| stage-1 compositor/shell 闭环 | 未开始 | 待 KMS 真机复验决策（CONFLICT-006） |
+| stage-1 compositor/shell 闭环 | 进行中 | KmsBackend/Libinput/Logind 开发中；物理 GPU 复验待 CONFLICT-006 |
 | stage-2 login/lock | 未开始 | 待 stage-1 验收通过后进入 |
 | stage-3 boot/shutdown | 未开始 | 待 stage-2 验收通过后进入 |
 | stage-4 purge | 未开始 | 待 stage-3 验收通过后进入 |
@@ -47,11 +48,11 @@
 
 ## 下一步
 
-1. 等待并记录 CONFLICT-006 决策：批准专用 KMS 真机验证环境或明确替代验证策略。
-2. 批准后进入 stage-1：KmsBackend、LibinputBackend、LogindSession、完整最小协议、
-   WM/最终合成、Shell 窗口化回归。
-3. 并行继续安装器：polkit helper、固定 Job 清单、专用硬件验证环境下的安装测试。
-4. stage-1 完成前不得发布产品镜像；无 X11/KWin/SDDM/Calamares 运行链回退。
+1. 完成 KmsBackend/LibinputBackend/LogindSession 编码与本地编译。
+2. 在测试服务器 `/tmp/<test-dir>` 下运行非破坏性 KMS/GBM/libinput 能力探针并清理。
+3. 继续实现最小协议集、WM 模型、最终合成与 Shell 窗口化。
+4. 物理 AMD/Intel GPU 模式设置/上屏复验仍需专用设备或明确放宽策略（CONFLICT-006）。
+5. stage-1 完成前不得发布产品镜像；无 X11/KWin/SDDM/Calamares 运行链回退。
 
 ## 未完成事项
 
