@@ -1,8 +1,11 @@
 #include "wayland/xdg_shell.h"
 
 #include "xdg-shell-server-protocol.h"
+#include "wm/window.h"
+#include "wm/workspace.h"
 
 #include <QDebug>
+#include <QList>
 
 #include <algorithm>
 
@@ -14,6 +17,8 @@ constexpr uint32_t kXdgVersion = 1;
 struct XdgResourceData {
     wl_resource *resource = nullptr;
     WaylandServer *server = nullptr;
+    wl_resource *surface = nullptr;
+    Window *window = nullptr;
 };
 
 struct xdg_wm_base_interface xdgWmBaseImplementation;
@@ -24,7 +29,12 @@ struct xdg_popup_interface xdgPopupImplementation;
 
 void xdgDestroyData(wl_resource *resource)
 {
-    delete static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (!data)
+        return;
+    if (data->window && data->server)
+        data->server->workspace()->destroyWindow(data->window);
+    delete data;
 }
 
 // xdg_wm_base -------------------------------------------------------------
@@ -60,6 +70,7 @@ void xdgWmBaseGetXdgSurface(wl_client *client, wl_resource *resource, uint32_t i
         return;
     }
     rd->server = data ? data->server : nullptr;
+    rd->surface = surface;
     wl_resource_set_implementation(rd->resource, &xdgSurfaceImplementation, rd, xdgDestroyData);
 }
 
@@ -134,14 +145,31 @@ void xdgSurfaceDestroy(wl_client *client, wl_resource *resource)
     wl_resource_destroy(resource);
 }
 
-void sendInitialToplevelConfigure(wl_client *client, wl_resource *xdgSurface, wl_resource *toplevel)
+void sendToplevelConfigure(wl_client *client, wl_resource *xdgSurface,
+                          wl_resource *toplevel, Window *window,
+                          int32_t width, int32_t height,
+                          const QList<uint32_t> &states)
 {
     const uint32_t serial = wl_display_next_serial(wl_client_get_display(client));
+    if (window)
+        window->setLastConfigureSerial(serial);
     xdg_surface_send_configure(xdgSurface, serial);
-    wl_array states;
-    wl_array_init(&states);
-    xdg_toplevel_send_configure(toplevel, 0, 0, &states);
-    wl_array_release(&states);
+    wl_array stateArray;
+    wl_array_init(&stateArray);
+    for (uint32_t state : states) {
+        uint32_t *entry = static_cast<uint32_t *>(wl_array_add(&stateArray, sizeof(uint32_t)));
+        if (entry)
+            *entry = state;
+    }
+    xdg_toplevel_send_configure(toplevel, width, height, &stateArray);
+    wl_array_release(&stateArray);
+}
+
+void sendInitialToplevelConfigure(wl_client *client, wl_resource *xdgSurface,
+                                  wl_resource *toplevel, Window *window)
+{
+    sendToplevelConfigure(client, xdgSurface, toplevel, window, 0, 0,
+                          {XDG_TOPLEVEL_STATE_ACTIVATED});
 }
 
 void xdgSurfaceGetToplevel(wl_client *client, wl_resource *resource, uint32_t id)
@@ -155,8 +183,14 @@ void xdgSurfaceGetToplevel(wl_client *client, wl_resource *resource, uint32_t id
         return;
     }
     rd->server = data ? data->server : nullptr;
+    if (rd->server && rd->server->workspace()) {
+        // surface is passed to the xdg_surface request below; associate it
+        // with the new Window model through the server workspace.
+    }
+    if (rd->server && data && data->surface)
+        rd->window = rd->server->workspace()->createWindow(data->surface, resource, rd->resource);
     wl_resource_set_implementation(rd->resource, &xdgToplevelImplementation, rd, xdgDestroyData);
-    sendInitialToplevelConfigure(client, resource, rd->resource);
+    sendInitialToplevelConfigure(client, resource, rd->resource, rd->window);
 }
 
 void xdgSurfaceGetPopup(wl_client *client, wl_resource *resource, uint32_t id,
@@ -200,6 +234,11 @@ void xdgSurfaceAckConfigure(wl_client *client, wl_resource *resource, uint32_t s
 void xdgToplevelDestroy(wl_client *client, wl_resource *resource)
 {
     Q_UNUSED(client)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (data && data->server && data->window) {
+        data->server->workspace()->destroyWindow(data->window);
+        data->window = nullptr;
+    }
     wl_resource_destroy(resource);
 }
 
@@ -213,15 +252,18 @@ void xdgToplevelSetParent(wl_client *client, wl_resource *resource, wl_resource 
 void xdgToplevelSetTitle(wl_client *client, wl_resource *resource, const char *title)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (data && data->window)
+        data->window->setTitle(QString::fromUtf8(title ? title : ""));
     qInfo() << "xdg_toplevel title" << (title ? title : "");
 }
 
 void xdgToplevelSetAppId(wl_client *client, wl_resource *resource, const char *appId)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
     auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (data && data->window)
+        data->window->setAppId(QString::fromUtf8(appId ? appId : ""));
     if (data && data->server && data->server->state())
         data->server->state()->setFocusedAppId(QString::fromUtf8(appId ? appId : ""));
 }
@@ -255,51 +297,82 @@ void xdgToplevelResize(wl_client *client, wl_resource *resource, wl_resource *se
     Q_UNUSED(edges)
 }
 
+QSize workspaceSize(WaylandServer *server)
+{
+    if (!server || !server->state() || !server->state()->displayBackend())
+        return QSize(1920, 1080);
+    const auto outputs = server->state()->displayBackend()->outputs();
+    return outputs.value(0).currentMode;
+}
+
 void xdgToplevelSetMaxSize(wl_client *client, wl_resource *resource, int32_t width, int32_t height)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(width)
-    Q_UNUSED(height)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (data && data->window)
+        data->window->setRequestedSize(QSize(width, height));
 }
 
 void xdgToplevelSetMinSize(wl_client *client, wl_resource *resource, int32_t width, int32_t height)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(width)
-    Q_UNUSED(height)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (data && data->window && data->window->requestedSize().isEmpty())
+        data->window->setRequestedSize(QSize(width, height));
 }
 
 void xdgToplevelSetMaximized(wl_client *client, wl_resource *resource)
 {
-    Q_UNUSED(client)
-    Q_UNUSED(resource)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (!data || !data->window)
+        return;
+    data->window->setState(Window::State::Maximized);
+    const QSize size = workspaceSize(data->server);
+    sendToplevelConfigure(client, data->window->xdgSurface(), resource, data->window,
+                          size.width(), size.height(),
+                          {XDG_TOPLEVEL_STATE_MAXIMIZED, XDG_TOPLEVEL_STATE_ACTIVATED});
 }
 
 void xdgToplevelUnsetMaximized(wl_client *client, wl_resource *resource)
 {
-    Q_UNUSED(client)
-    Q_UNUSED(resource)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (!data || !data->window)
+        return;
+    data->window->setState(Window::State::Normal);
+    sendToplevelConfigure(client, data->window->xdgSurface(), resource, data->window, 0, 0,
+                          {XDG_TOPLEVEL_STATE_ACTIVATED});
 }
 
 void xdgToplevelSetFullscreen(wl_client *client, wl_resource *resource, wl_resource *output)
 {
-    Q_UNUSED(client)
-    Q_UNUSED(resource)
     Q_UNUSED(output)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (!data || !data->window)
+        return;
+    data->window->setState(Window::State::Fullscreen);
+    const QSize size = workspaceSize(data->server);
+    sendToplevelConfigure(client, data->window->xdgSurface(), resource, data->window,
+                          size.width(), size.height(),
+                          {XDG_TOPLEVEL_STATE_FULLSCREEN, XDG_TOPLEVEL_STATE_ACTIVATED});
 }
 
 void xdgToplevelUnsetFullscreen(wl_client *client, wl_resource *resource)
 {
-    Q_UNUSED(client)
-    Q_UNUSED(resource)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (!data || !data->window)
+        return;
+    data->window->setState(Window::State::Normal);
+    sendToplevelConfigure(client, data->window->xdgSurface(), resource, data->window, 0, 0,
+                          {XDG_TOPLEVEL_STATE_ACTIVATED});
 }
 
 void xdgToplevelSetMinimized(wl_client *client, wl_resource *resource)
 {
-    Q_UNUSED(client)
-    Q_UNUSED(resource)
+    auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
+    if (!data || !data->window)
+        return;
+    data->window->setState(Window::State::Minimized);
+    sendToplevelConfigure(client, data->window->xdgSurface(), resource, data->window, 0, 0, {});
 }
 
 

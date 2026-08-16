@@ -519,6 +519,7 @@ WaylandServer *WaylandServer::s_instance = nullptr;
 WaylandServer::WaylandServer(CoreState *state, QObject *parent)
     : QObject(parent)
     , m_state(state)
+    , m_workspace(new Workspace(this))
 {
     s_instance = this;
     if (::pipe2(m_terminatePipe, O_CLOEXEC | O_NONBLOCK) != 0)
@@ -682,6 +683,11 @@ wl_display *WaylandServer::shellDisplay() const
 WaylandServer *WaylandServer::instance()
 {
     return s_instance;
+}
+
+Workspace *WaylandServer::workspace() const
+{
+    return m_workspace;
 }
 
 CoreState *WaylandServer::state() const

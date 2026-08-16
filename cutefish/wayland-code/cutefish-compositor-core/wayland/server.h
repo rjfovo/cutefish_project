@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core_state.h"
+#include "wm/workspace.h"
 
 #include <QObject>
 #include <QString>
@@ -26,6 +27,8 @@ public:
 
     static WaylandServer *instance();
 
+    Workspace *workspace() const;
+
     // Internal protocol implementation surface used by server.cpp.
     CoreState *state() const;
     wl_resource *trustedShellResource() const;
@@ -37,6 +40,7 @@ private:
     void broadcastLifecycle() const;
 
     CoreState *m_state = nullptr;
+    Workspace *m_workspace = nullptr;
     wl_display *m_appsDisplay = nullptr;
     wl_display *m_shellDisplay = nullptr;
     wl_resource *m_trustedShellResource = nullptr;

@@ -3,6 +3,7 @@
 // devices and never performs privileged operations.
 
 #include "cutefish-core-v1-client-protocol.h"
+#include "xdg-shell-client-protocol.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -29,7 +30,40 @@ struct RegistryState {
     bool xdgShell = false;
     bool core = false;
     uint32_t coreName = 0;
+    uint32_t compositorName = 0;
+    uint32_t xdgName = 0;
 };
+
+struct ToplevelState {
+    int configureCount = 0;
+    bool activated = false;
+    bool maximized = false;
+};
+
+void toplevelConfigure(void *data, xdg_toplevel *toplevel, int32_t width, int32_t height, wl_array *states)
+{
+    Q_UNUSED(toplevel)
+    Q_UNUSED(width)
+    Q_UNUSED(height)
+    auto *tracker = static_cast<ToplevelState *>(data);
+    tracker->configureCount++;
+    tracker->activated = false;
+    tracker->maximized = false;
+    for (size_t i = 0; i < states->size / sizeof(uint32_t); ++i) {
+        uint32_t state = 0;
+        std::memcpy(&state, static_cast<char *>(states->data) + i * sizeof(uint32_t), sizeof(state));
+        if (state == XDG_TOPLEVEL_STATE_ACTIVATED)
+            tracker->activated = true;
+        if (state == XDG_TOPLEVEL_STATE_MAXIMIZED)
+            tracker->maximized = true;
+    }
+}
+
+void toplevelClose(void *data, xdg_toplevel *toplevel)
+{
+    Q_UNUSED(data)
+    Q_UNUSED(toplevel)
+}
 
 void registryGlobal(void *data, wl_registry *registry, uint32_t name,
                     const char *interface, uint32_t version)
@@ -103,6 +137,48 @@ bool scanSocket(const QString &socketName, RegistryState *state)
             }
             cutefish_core_v1_destroy(core);
         }
+    }
+
+    if (state->xdgShell && state->compositor && state->xdgName && state->compositorName) {
+        auto *compositor = static_cast<wl_compositor *>(
+            wl_registry_bind(registry, state->compositorName, &wl_compositor_interface, 4));
+        auto *wm = static_cast<xdg_wm_base *>(
+            wl_registry_bind(registry, state->xdgName, &xdg_wm_base_interface, 1));
+        wl_surface *surface = wl_compositor_create_surface(compositor);
+        xdg_surface *xdgSurface = xdg_wm_base_get_xdg_surface(wm, surface);
+        xdg_toplevel *toplevel = xdg_surface_get_toplevel(xdgSurface);
+        if (!surface || !xdgSurface || !toplevel) {
+            qCritical() << "xdg toplevel creation failed";
+            ok = false;
+        } else {
+            ToplevelState tracker;
+            xdg_toplevel_listener listener {};
+            listener.configure = toplevelConfigure;
+            listener.close = toplevelClose;
+            xdg_toplevel_add_listener(toplevel, &listener, &tracker);
+            xdg_toplevel_set_title(toplevel, "wayland-protocol-smoke");
+            xdg_toplevel_set_app_id(toplevel, "com.cutefish.smoke");
+            xdg_toplevel_set_min_size(toplevel, 100, 80);
+            wl_surface_commit(surface);
+            if (wl_display_roundtrip(display) < 0) {
+                qCritical() << "xdg initial roundtrip failed";
+                ok = false;
+            }
+            if (tracker.configureCount < 1 || !tracker.activated) {
+                qCritical() << "xdg initial configure missing activated state";
+                ok = false;
+            }
+            xdg_toplevel_set_maximized(toplevel);
+            if (wl_display_roundtrip(display) < 0 || !tracker.maximized) {
+                qCritical() << "xdg maximized configure missing";
+                ok = false;
+            }
+            xdg_toplevel_destroy(toplevel);
+            xdg_surface_destroy(xdgSurface);
+            wl_surface_destroy(surface);
+        }
+        wl_compositor_destroy(compositor);
+        xdg_wm_base_destroy(wm);
     }
 
     wl_registry_destroy(registry);

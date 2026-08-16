@@ -50,11 +50,13 @@ pkg_get_variable(WAYLAND_PROTOCOLS_DATADIR wayland-protocols pkgdatadir)
 set(XDG_SHELL_XML "${WAYLAND_PROTOCOLS_DATADIR}/stable/xdg-shell/xdg-shell.xml")
 set(XDG_SHELL_C "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-protocol.c")
 set(XDG_SHELL_SERVER_H "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-server-protocol.h")
+set(XDG_SHELL_CLIENT_H "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h")
 
 add_custom_command(
-    OUTPUT "${XDG_SHELL_C}" "${XDG_SHELL_SERVER_H}"
+    OUTPUT "${XDG_SHELL_C}" "${XDG_SHELL_SERVER_H}" "${XDG_SHELL_CLIENT_H}"
     COMMAND "${WAYLAND_SCANNER}" private-code "${XDG_SHELL_XML}" "${XDG_SHELL_C}"
     COMMAND "${WAYLAND_SCANNER}" server-header "${XDG_SHELL_XML}" "${XDG_SHELL_SERVER_H}"
+    COMMAND "${WAYLAND_SCANNER}" client-header "${XDG_SHELL_XML}" "${XDG_SHELL_CLIENT_H}"
     DEPENDS "${XDG_SHELL_XML}"
     VERBATIM
 )
@@ -73,6 +75,8 @@ add_executable(cutefish-compositor-core
     session/logind_session.cpp
     core_state.cpp
     lifecycle/state_machine.cpp
+    wm/window.cpp
+    wm/workspace.cpp
     wayland/server.cpp
     wayland/xdg_shell.cpp
 )
@@ -108,6 +112,7 @@ if(BUILD_TESTING)
         Qt6::Core
         PkgConfig::WAYLAND_CLIENT
         cutefish-core-v1-protocol
+        cutefish-xdg-shell-protocol
     )
     add_test(
         NAME wayland_protocol_smoke
