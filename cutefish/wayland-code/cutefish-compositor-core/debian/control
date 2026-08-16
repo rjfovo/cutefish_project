@@ -1,0 +1,15 @@
+Source: cutefish-compositor-core
+Section: devel
+Priority: optional
+Maintainer: CutefishOS <cutefishos@foxmail.com>
+Build-Depends: cmake,
+               debhelper (>= 9),
+               pkg-config,
+               libwayland-dev, libwayland-bin, qt6-base-dev
+Standards-Version: 4.5.0
+Homepage: https://github.com/cutefishos
+
+Package: cutefish-compositor-core
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, libwayland-server0, qt6-wayland
+Description: CutefishOS dedicated Wayland compositor core (stage-0 VirtualBackend baseline).

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="cutefish_core_v1">
+  <copyright>CutefishOS. Internal trusted-shell protocol. Applications must never bind this interface.</copyright>
+
+  <interface name="cutefish_core_v1" version="1">
+    <description summary="Cutefish trusted shell control protocol">
+      Versioned private channel between cutefish-compositor-core and
+      cutefish-shell. The interface is registered only on the shell socket.
+      It is never registered on the ordinary applications socket.
+    </description>
+
+    <enum name="lifecycle_state">
+      <entry name="boot" value="0" summary="boot shell active"/>
+      <entry name="login" value="1" summary="greeter/login shell active"/>
+      <entry name="session" value="2" summary="user session active"/>
+      <entry name="lock" value="3" summary="session locked"/>
+      <entry name="shutdown" value="4" summary="shutdown shell active"/>
+    </enum>
+
+    <enum name="shell_surface_role">
+      <entry name="boot" value="0"/>
+      <entry name="login" value="1"/>
+      <entry name="lock" value="2"/>
+      <entry name="session_shell" value="3"/>
+      <entry name="desktop" value="4"/>
+      <entry name="dock" value="5"/>
+      <entry name="statusbar" value="6"/>
+      <entry name="launcher" value="7"/>
+      <entry name="notification" value="8"/>
+      <entry name="shutdown" value="9"/>
+    </enum>
+
+    <request name="destroy" type="destructor" since="1"/>
+
+    <request name="shell_ready" since="1">
+      <description summary="Client announces it is the trusted shell">
+        The version argument is the highest cutefish_core_v1 version supported
+        by the client. The core must reject more than one trusted shell client.
+      </description>
+      <arg name="version" type="uint"/>
+      <arg name="mode" type="uint" enum="lifecycle_state"/>
+    </request>
+
+    <request name="bind_shell_surface" since="1">
+      <description summary="Declare a surface role and placement class">
+        Shell surfaces are composited by role. Ordinary applications can never
+        reach this interface because it is absent from the apps socket.
+      </description>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="role" type="uint" enum="shell_surface_role"/>
+      <arg name="output" type="string" allow-null="true"/>
+      <arg name="z_order" type="int"/>
+    </request>
+
+    <request name="get_outputs" since="1"/>
+
+    <request name="set_output_config" since="1">
+      <arg name="name" type="string"/>
+      <arg name="mode_width" type="int"/>
+      <arg name="mode_height" type="int"/>
+      <arg name="scale" type="int"/>
+      <arg name="transform" type="int"/>
+    </request>
+
+    <request name="set_dock_geometry" since="1">
+      <arg name="x" type="int"/>
+      <arg name="y" type="int"/>
+      <arg name="width" type="int"/>
+      <arg name="height" type="int"/>
+    </request>
+
+    <request name="set_panel_geometry" since="1">
+      <arg name="x" type="int"/>
+      <arg name="y" type="int"/>
+      <arg name="width" type="int"/>
+      <arg name="height" type="int"/>
+    </request>
+
+    <request name="lock" since="1"/>
+    <request name="unlock" since="1"/>
+    <request name="request_activate" since="1">
+      <arg name="app_id" type="string"/>
+    </request>
+    <request name="request_close" since="1">
+      <arg name="app_id" type="string"/>
+    </request>
+
+    <event name="lifecycle_state" since="1">
+      <arg name="state" type="uint" enum="lifecycle_state"/>
+    </event>
+
+    <event name="output" since="1">
+      <arg name="name" type="string"/>
+      <arg name="mode_width" type="int"/>
+      <arg name="mode_height" type="int"/>
+      <arg name="scale" type="int"/>
+      <arg name="transform" type="int"/>
+      <arg name="connected" type="uint"/>
+    </event>
+
+    <event name="window_focus_changed" since="1">
+      <arg name="app_id" type="string" allow-null="true"/>
+    </event>
+
+    <event name="lock_changed" since="1">
+      <arg name="locked" type="uint"/>
+    </event>
+  </interface>
+</protocol>

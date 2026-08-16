@@ -1,0 +1,15 @@
+[Unit]
+Description=CutefishOS Wayland Compositor Core
+After=systemd-user-sessions.service
+Wants=systemd-logind.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/cutefish-compositor-core
+Restart=always
+RestartSec=250ms
+TimeoutStopSec=10s
+OOMScoreAdjust=-900
+
+[Install]
+WantedBy=multi-user.target
