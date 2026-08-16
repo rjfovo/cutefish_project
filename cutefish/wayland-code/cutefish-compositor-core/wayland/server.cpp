@@ -533,6 +533,7 @@ WaylandServer::WaylandServer(CoreState *state, QObject *parent)
     , m_seat(new Seat(this))
     , m_activation(new XdgActivation(this, this))
     , m_dataDevices(new DataDeviceManager(this))
+    , m_dataControl(new DataControlManager(m_dataDevices, this))
     , m_textInput(new TextInputManager(this, this))
 {
     s_instance = this;
@@ -578,6 +579,8 @@ bool WaylandServer::registerGlobals(wl_display *display, bool trustedShellDispla
     if (!m_activation->registerDisplay(display))
         return false;
     if (!m_dataDevices->registerDisplay(display))
+        return false;
+    if (!m_dataControl->registerDisplay(display))
         return false;
     if (!m_textInput->registerDisplay(display))
         return false;
@@ -681,6 +684,9 @@ int WaylandServer::run()
             const QList<int> dataFds = m_dataDevices->pendingReadFds();
             for (int dataFd : dataFds)
                 fds.append({ dataFd, POLLIN, 0 });
+            const QList<int> controlFds = m_dataControl->pendingReadFds();
+            for (int controlFd : controlFds)
+                fds.append({ controlFd, POLLIN, 0 });
 
             const int prc = poll(fds.data(), static_cast<nfds_t>(fds.size()), 100);
             if (prc < 0 && errno != EINTR)
@@ -693,8 +699,10 @@ int WaylandServer::run()
             }
             if (prc > 0) {
                 for (int i = 4; i < fds.size(); ++i) {
-                    if (fds[i].revents & (POLLIN | POLLHUP | POLLERR))
+                    if (fds[i].revents & (POLLIN | POLLHUP | POLLERR)) {
                         m_dataDevices->dispatchPendingRead(fds[i].fd);
+                        m_dataControl->dispatchPendingRead(fds[i].fd);
+                    }
                 }
             }
         }
@@ -745,6 +753,11 @@ XdgActivation *WaylandServer::activation() const
 DataDeviceManager *WaylandServer::dataDevices() const
 {
     return m_dataDevices;
+}
+
+DataControlManager *WaylandServer::dataControl() const
+{
+    return m_dataControl;
 }
 
 TextInputManager *WaylandServer::textInput() const

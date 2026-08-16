@@ -87,6 +87,25 @@ add_library(cutefish-text-input-protocol STATIC "${TEXT_INPUT_C}")
 target_include_directories(cutefish-text-input-protocol PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
 set_target_properties(cutefish-text-input-protocol PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+# Vendored wlr-data-control-unstable-v1 protocol code.
+set(DATA_CONTROL_XML "${CMAKE_CURRENT_SOURCE_DIR}/protocol/vendor/wlr-data-control-unstable-v1.xml")
+set(DATA_CONTROL_C "${CMAKE_CURRENT_BINARY_DIR}/wlr-data-control-unstable-v1-protocol.c")
+set(DATA_CONTROL_SERVER_H "${CMAKE_CURRENT_BINARY_DIR}/wlr-data-control-unstable-v1-server-protocol.h")
+set(DATA_CONTROL_CLIENT_H "${CMAKE_CURRENT_BINARY_DIR}/wlr-data-control-unstable-v1-client-protocol.h")
+
+add_custom_command(
+    OUTPUT "${DATA_CONTROL_C}" "${DATA_CONTROL_SERVER_H}" "${DATA_CONTROL_CLIENT_H}"
+    COMMAND "${WAYLAND_SCANNER}" private-code "${DATA_CONTROL_XML}" "${DATA_CONTROL_C}"
+    COMMAND "${WAYLAND_SCANNER}" server-header "${DATA_CONTROL_XML}" "${DATA_CONTROL_SERVER_H}"
+    COMMAND "${WAYLAND_SCANNER}" client-header "${DATA_CONTROL_XML}" "${DATA_CONTROL_CLIENT_H}"
+    DEPENDS "${DATA_CONTROL_XML}"
+    VERBATIM
+)
+
+add_library(cutefish-data-control-protocol STATIC "${DATA_CONTROL_C}")
+target_include_directories(cutefish-data-control-protocol PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+set_target_properties(cutefish-data-control-protocol PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # wp_primary_selection_unstable_v1 protocol code.
 set(PRIMARY_SELECTION_XML "${WAYLAND_PROTOCOLS_DATADIR}/unstable/primary-selection/primary-selection-unstable-v1.xml")
 set(PRIMARY_SELECTION_C "${CMAKE_CURRENT_BINARY_DIR}/primary-selection-unstable-v1-protocol.c")
@@ -139,6 +158,7 @@ add_executable(cutefish-compositor-core
     lifecycle/state_machine.cpp
     wm/window.cpp
     wm/workspace.cpp
+    wayland/data_control.cpp
     wayland/data_device.cpp
     wayland/seat.cpp
     wayland/server.cpp
@@ -162,6 +182,7 @@ target_link_libraries(cutefish-compositor-core PRIVATE
     PkgConfig::XKBCOMMON
     cutefish-core-v1-protocol
     cutefish-primary-selection-protocol
+    cutefish-data-control-protocol
     cutefish-text-input-protocol
     cutefish-xdg-shell-protocol
     cutefish-xdg-activation-protocol
@@ -186,6 +207,7 @@ if(BUILD_TESTING)
         cutefish-xdg-activation-protocol
         cutefish-text-input-protocol
         cutefish-primary-selection-protocol
+        cutefish-data-control-protocol
     )
     add_test(
         NAME wayland_protocol_smoke

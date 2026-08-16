@@ -6,6 +6,7 @@
 #include "xdg-activation-v1-client-protocol.h"
 #include "text-input-unstable-v3-client-protocol.h"
 #include "wayland-primary-selection-unstable-v1-client-protocol.h"
+#include "wlr-data-control-unstable-v1-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
 #include <QCoreApplication>
@@ -34,6 +35,7 @@ struct RegistryState {
     bool activation = false;
     bool dataManager = false;
     bool primarySelection = false;
+    bool dataControl = false;
     bool textInput = false;
     bool core = false;
     uint32_t coreName = 0;
@@ -43,6 +45,7 @@ struct RegistryState {
     uint32_t activationName = 0;
     uint32_t dataManagerName = 0;
     uint32_t primarySelectionName = 0;
+    uint32_t dataControlName = 0;
     uint32_t textInputName = 0;
 };
 
@@ -340,6 +343,9 @@ void registryGlobal(void *data, wl_registry *registry, uint32_t name,
     } else if (std::strcmp(interface, wl_data_device_manager_interface.name) == 0) {
         state->dataManager = true;
         state->dataManagerName = name;
+    } else if (std::strcmp(interface, "zwlr_data_control_manager_v1") == 0) {
+        state->dataControl = true;
+        state->dataControlName = name;
     } else if (std::strcmp(interface, "zwp_primary_selection_device_manager_v1") == 0) {
         state->primarySelection = true;
         state->primarySelectionName = name;
@@ -553,6 +559,24 @@ bool scanSocket(const QString &socketName, RegistryState *state)
         zwp_primary_selection_device_v1_destroy(primaryDevice);
         zwp_primary_selection_device_manager_v1_destroy(primaryManager);
     }
+    if (state->dataControl && state->dataControlName && state->seatName) {
+        auto *dcManager = static_cast<zwlr_data_control_manager_v1 *>(
+            wl_registry_bind(registry, state->dataControlName, &zwlr_data_control_manager_v1_interface, 1));
+        auto *dcSource = zwlr_data_control_manager_v1_create_data_source(dcManager);
+        auto *dcDevice = zwlr_data_control_manager_v1_get_data_device(dcManager, seat);
+        if (!dcSource || !dcDevice) {
+            qCritical() << "data-control source/device creation failed";
+            ok = false;
+        } else {
+            wl_display_roundtrip(display);
+        }
+        if (dcSource)
+            zwlr_data_control_source_v1_destroy(dcSource);
+        if (dcDevice)
+            zwlr_data_control_device_v1_destroy(dcDevice);
+        zwlr_data_control_manager_v1_destroy(dcManager);
+    }
+
     if (state->xdgShell && state->compositor && state->xdgName && state->compositorName) {
         auto *compositor = static_cast<wl_compositor *>(
             wl_registry_bind(registry, state->compositorName, &wl_compositor_interface, 4));

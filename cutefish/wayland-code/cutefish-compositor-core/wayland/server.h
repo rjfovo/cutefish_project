@@ -10,6 +10,7 @@
 
 #include "core_state.h"
 #include "input/input_backend.h"
+#include "wayland/data_control.h"
 #include "wayland/data_device.h"
 #include "wayland/seat.h"
 #include "wayland/text_input.h"
@@ -44,6 +45,7 @@ public:
     Seat *seat() const;
     XdgActivation *activation() const;
     DataDeviceManager *dataDevices() const;
+    DataControlManager *dataControl() const;
     TextInputManager *textInput() const;
     void setInputBackend(InputBackend *backend);
     InputBackend *inputBackend() const;
@@ -66,6 +68,7 @@ private:
     Seat *m_seat = nullptr;
     XdgActivation *m_activation = nullptr;
     DataDeviceManager *m_dataDevices = nullptr;
+    DataControlManager *m_dataControl = nullptr;
     TextInputManager *m_textInput = nullptr;
     InputBackend *m_inputBackend = nullptr;
     wl_display *m_appsDisplay = nullptr;
