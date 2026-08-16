@@ -65,7 +65,10 @@ Window::State Window::state() const
 
 void Window::setState(State state)
 {
+    if (m_state == state)
+        return;
     m_state = state;
+    emit stateChanged();
 }
 
 bool Window::activated() const
@@ -86,6 +89,16 @@ uint32_t Window::lastConfigureSerial() const
 void Window::setLastConfigureSerial(uint32_t serial)
 {
     m_lastConfigureSerial = serial;
+}
+
+uint32_t Window::id() const
+{
+    return m_id;
+}
+
+void Window::setId(uint32_t id)
+{
+    m_id = id;
 }
 
 } // namespace Cutefish

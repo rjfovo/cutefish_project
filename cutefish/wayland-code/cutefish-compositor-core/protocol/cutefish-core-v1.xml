@@ -2,7 +2,7 @@
 <protocol name="cutefish_core_v1">
   <copyright>CutefishOS. Internal trusted-shell protocol. Applications must never bind this interface.</copyright>
 
-  <interface name="cutefish_core_v1" version="1">
+  <interface name="cutefish_core_v1" version="2">
     <description summary="Cutefish trusted shell control protocol">
       Versioned private channel between cutefish-compositor-core and
       cutefish-shell. The interface is registered only on the shell socket.
@@ -85,6 +85,7 @@
       <arg name="app_id" type="string"/>
     </request>
 
+
     <event name="lifecycle_state" since="1">
       <arg name="state" type="uint" enum="lifecycle_state"/>
     </event>
@@ -105,5 +106,33 @@
     <event name="lock_changed" since="1">
       <arg name="locked" type="uint"/>
     </event>
+
+    <request name="get_windows" since="2">
+      <description summary="Request the complete current window model">
+        The core replies with one window event per known toplevel followed by
+        no explicit done event; clients bound to version 2 use the event
+        stream as the model source.
+      </description>
+    </request>
+
+
+    <event name="window" since="2">
+      <arg name="id" type="uint"/>
+      <arg name="app_id" type="string" allow-null="true"/>
+      <arg name="title" type="string" allow-null="true"/>
+      <arg name="state" type="uint"/>
+      <arg name="activated" type="uint"/>
+    </event>
+
+    <event name="window_destroyed" since="2">
+      <arg name="id" type="uint"/>
+    </event>
+
+    <event name="window_state_changed" since="2">
+      <arg name="id" type="uint"/>
+      <arg name="state" type="uint"/>
+      <arg name="activated" type="uint"/>
+    </event>
+
   </interface>
 </protocol>

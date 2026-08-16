@@ -27,3 +27,11 @@
 
 - 未验收。待完成：move/resize 交互、焦点/z-order 策略、最小化恢复、Qt Quick
   真实菜单/ComboBox/ToolTip 回归、与 Shell 私有协议窗口模型对接。
+
+## 追加：cutefish_core_v1 窗口模型事件
+
+- 协议版本升级到 2；新增 `get_windows` 请求和 `window`、`window_destroyed`、
+  `window_state_changed` 事件（since=2，保持 v1 兼容）。
+- Workspace/Window 增加窗口 id、添加/删除/状态变更信号。
+- Server 将窗口模型广播到受信 Shell 的 `cutefish_core_v1` 资源。
+- 协议冒烟测试覆盖 v2 窗口事件：PASS。

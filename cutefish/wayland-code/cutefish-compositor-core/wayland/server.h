@@ -39,6 +39,9 @@ public:
     wl_resource *trustedShellResource() const;
     void setTrustedShellResource(wl_resource *resource);
     void handleCoreReady(wl_resource *resource, uint32_t version, uint32_t mode);
+    void sendWindowToShell(wl_resource *resource, Window *window);
+    void notifyWindowRemoved(Window *window);
+    void notifyWindowStateChanged(Window *window);
 
 private:
     bool registerGlobals(wl_display *display, bool trustedShellDisplay);

@@ -41,6 +41,76 @@ struct ToplevelState {
     bool maximized = false;
 };
 
+struct CoreWindowState {
+    int windowCount = 0;
+    int stateChanges = 0;
+    int destroyed = 0;
+};
+
+void coreLifecycle(void *data, cutefish_core_v1 *core, uint32_t state)
+{
+    Q_UNUSED(data)
+    Q_UNUSED(core)
+    Q_UNUSED(state)
+}
+
+void coreOutput(void *data, cutefish_core_v1 *core, const char *name,
+                int32_t width, int32_t height, int32_t scale, int32_t transform, uint32_t connected)
+{
+    Q_UNUSED(data)
+    Q_UNUSED(core)
+    Q_UNUSED(name)
+    Q_UNUSED(width)
+    Q_UNUSED(height)
+    Q_UNUSED(scale)
+    Q_UNUSED(transform)
+    Q_UNUSED(connected)
+}
+
+void coreFocusChanged(void *data, cutefish_core_v1 *core, const char *appId)
+{
+    Q_UNUSED(data)
+    Q_UNUSED(core)
+    Q_UNUSED(appId)
+}
+
+void coreLockChanged(void *data, cutefish_core_v1 *core, uint32_t locked)
+{
+    Q_UNUSED(data)
+    Q_UNUSED(core)
+    Q_UNUSED(locked)
+}
+
+void coreWindowEvent(void *data, cutefish_core_v1 *core, uint32_t id,
+                     const char *appId, const char *title, uint32_t state, uint32_t activated)
+{
+    Q_UNUSED(core)
+    Q_UNUSED(id)
+    Q_UNUSED(appId)
+    Q_UNUSED(title)
+    Q_UNUSED(state)
+    Q_UNUSED(activated)
+    auto *tracker = static_cast<CoreWindowState *>(data);
+    tracker->windowCount++;
+}
+
+void coreWindowDestroyed(void *data, cutefish_core_v1 *core, uint32_t id)
+{
+    Q_UNUSED(core)
+    Q_UNUSED(id)
+    static_cast<CoreWindowState *>(data)->destroyed++;
+}
+
+void coreWindowStateChanged(void *data, cutefish_core_v1 *core, uint32_t id,
+                            uint32_t state, uint32_t activated)
+{
+    Q_UNUSED(core)
+    Q_UNUSED(id)
+    Q_UNUSED(state)
+    Q_UNUSED(activated)
+    static_cast<CoreWindowState *>(data)->stateChanges++;
+}
+
 struct InputState {
     bool keyboardEnter = false;
     bool pointerEnter = false;
@@ -199,20 +269,31 @@ bool scanSocket(const QString &socketName, RegistryState *state)
             << "xdg_wm_base" << state->xdgShell
             << "cutefish_core_v1" << state->core;
 
+    cutefish_core_v1 *core = nullptr;
+    CoreWindowState coreWindowState;
     if (state->core) {
-        auto *core = static_cast<cutefish_core_v1 *>(
-            wl_registry_bind(registry, state->coreName, &cutefish_core_v1_interface, 1));
+        core = static_cast<cutefish_core_v1 *>(
+            wl_registry_bind(registry, state->coreName, &cutefish_core_v1_interface, 2));
         if (!core) {
             qCritical() << "bind cutefish_core_v1 failed";
             ok = false;
         } else {
-            cutefish_core_v1_shell_ready(core, 1, 1);
+            cutefish_core_v1_listener coreListener {};
+            coreListener.lifecycle_state = coreLifecycle;
+            coreListener.output = coreOutput;
+            coreListener.window_focus_changed = coreFocusChanged;
+            coreListener.lock_changed = coreLockChanged;
+            coreListener.window = coreWindowEvent;
+            coreListener.window_destroyed = coreWindowDestroyed;
+            coreListener.window_state_changed = coreWindowStateChanged;
+            cutefish_core_v1_add_listener(core, &coreListener, &coreWindowState);
+            cutefish_core_v1_shell_ready(core, 2, 1);
             cutefish_core_v1_get_outputs(core);
+            cutefish_core_v1_get_windows(core);
             if (wl_display_roundtrip(display) < 0) {
                 qCritical() << "cutefish_core_v1 request roundtrip failed";
                 ok = false;
             }
-            cutefish_core_v1_destroy(core);
         }
     }
 
@@ -279,6 +360,14 @@ bool scanSocket(const QString &socketName, RegistryState *state)
                 qCritical() << "xdg maximized configure missing";
                 ok = false;
             }
+            if (core && coreWindowState.windowCount < 1) {
+                qCritical() << "cutefish_core_v1 window event missing";
+                ok = false;
+            }
+            if (core && coreWindowState.stateChanges < 1) {
+                qCritical() << "cutefish_core_v1 window state-change event missing";
+                ok = false;
+            }
 
             xdg_positioner *positioner = xdg_wm_base_create_positioner(wm);
             xdg_positioner_set_size(positioner, 200, 100);
@@ -313,6 +402,8 @@ bool scanSocket(const QString &socketName, RegistryState *state)
         xdg_wm_base_destroy(wm);
     }
 
+    if (core)
+        cutefish_core_v1_destroy(core);
     if (pointer)
         wl_pointer_destroy(pointer);
     if (keyboard)

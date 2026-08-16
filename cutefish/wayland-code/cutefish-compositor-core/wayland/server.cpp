@@ -25,7 +25,7 @@ namespace {
 
 constexpr uint32_t kCompositorVersion = 4;
 constexpr uint32_t kOutputVersion = 3;
-constexpr uint32_t kCoreProtocolVersion = 1;
+constexpr uint32_t kCoreProtocolVersion = 2;
 
 struct ServerGlobals {
     WaylandServer *server = nullptr;
@@ -316,6 +316,17 @@ void coreBindShellSurface(wl_client *client, wl_resource *resource, wl_resource 
             << "output" << (output ? output : QStringLiteral("")) << "z" << zOrder;
 }
 
+void coreGetWindows(wl_client *client, wl_resource *resource)
+{
+    Q_UNUSED(client)
+    auto *data = static_cast<ResourceData *>(wl_resource_get_user_data(resource));
+    if (!data || !data->server || !data->server->workspace())
+        return;
+    const auto windows = data->server->workspace()->windows();
+    for (Window *window : windows)
+        data->server->sendWindowToShell(resource, window);
+}
+
 void coreGetOutputs(wl_client *client, wl_resource *resource)
 {
     Q_UNUSED(client)
@@ -407,6 +418,7 @@ const struct cutefish_core_v1_interface coreImplementation = {
     coreUnlock,
     coreRequestActivate,
     coreRequestClose,
+    coreGetWindows,
 };
 
 void coreBind(wl_client *client, void *data, uint32_t version, uint32_t id)
@@ -480,6 +492,8 @@ WaylandServer::WaylandServer(CoreState *state, QObject *parent)
     connect(m_workspace, &Workspace::activeWindowChanged, this, [this](Window *window) {
         m_seat->setFocusSurface(window ? window->surface() : nullptr);
     });
+    connect(m_workspace, &Workspace::windowRemoved, this, &WaylandServer::notifyWindowRemoved);
+    connect(m_workspace, &Workspace::windowStateChanged, this, &WaylandServer::notifyWindowStateChanged);
     if (::pipe2(m_terminatePipe, O_CLOEXEC | O_NONBLOCK) != 0)
         qWarning() << "failed to create termination pipe";
 }
@@ -691,6 +705,33 @@ void WaylandServer::broadcastLifecycle() const
         return;
     cutefish_core_v1_send_lifecycle_state(m_trustedShellResource,
                                           static_cast<uint32_t>(m_state->lifecycle()->state()));
+}
+
+void WaylandServer::sendWindowToShell(wl_resource *resource, Window *window)
+{
+    if (!resource || !window || wl_resource_get_version(resource) < 2)
+        return;
+    cutefish_core_v1_send_window(resource, window->id(),
+                                 window->appId().toUtf8().constData(),
+                                 window->title().toUtf8().constData(),
+                                 static_cast<uint32_t>(window->state()),
+                                 window->activated() ? 1u : 0u);
+}
+
+void WaylandServer::notifyWindowRemoved(Window *window)
+{
+    if (!m_trustedShellResource || !window || wl_resource_get_version(m_trustedShellResource) < 2)
+        return;
+    cutefish_core_v1_send_window_destroyed(m_trustedShellResource, window->id());
+}
+
+void WaylandServer::notifyWindowStateChanged(Window *window)
+{
+    if (!m_trustedShellResource || !window || wl_resource_get_version(m_trustedShellResource) < 2)
+        return;
+    cutefish_core_v1_send_window_state_changed(m_trustedShellResource, window->id(),
+                                               static_cast<uint32_t>(window->state()),
+                                               window->activated() ? 1u : 0u);
 }
 
 void WaylandServer::handleCoreReady(wl_resource *resource, uint32_t version, uint32_t mode)

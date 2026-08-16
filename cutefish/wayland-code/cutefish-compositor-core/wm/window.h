@@ -45,6 +45,14 @@ public:
     uint32_t lastConfigureSerial() const;
     void setLastConfigureSerial(uint32_t serial);
 
+    uint32_t id() const;
+    void setId(uint32_t id);
+
+signals:
+    void stateChanged();
+
+
+
 private:
     wl_resource *m_surface = nullptr;
     wl_resource *m_xdgSurface = nullptr;
@@ -55,6 +63,7 @@ private:
     State m_state = State::Normal;
     bool m_activated = false;
     uint32_t m_lastConfigureSerial = 0;
+    uint32_t m_id = 0;
 };
 
 } // namespace Cutefish

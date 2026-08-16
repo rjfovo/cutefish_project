@@ -24,13 +24,21 @@ public:
 
     QList<Window *> windows() const;
     QList<Window *> windowsInStackingOrder() const;
+    void notifyWindowStateChanged();
+
+public slots:
+    void handleWindowStateChanged();
 
 signals:
     void activeWindowChanged(Window *window);
+    void windowAdded(Window *window);
+    void windowRemoved(Window *window);
+    void windowStateChanged(Window *window);
 
 private:
     QList<Window *> m_windows;
     Window *m_activeWindow = nullptr;
+    uint32_t m_nextWindowId = 1;
 };
 
 } // namespace Cutefish
