@@ -51,6 +51,8 @@ sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
         dbus \
         network-manager \
         vim \
+        plymouth \
+        plymouth-label \
         squashfs-tools \
         grub-common \
         grub2-common \
@@ -165,6 +167,36 @@ sudo chroot "${DEBIAN_LIVE_CHROOT}" << EOF
 EOF
 
 cd ${BUILD_OLD_DIR}
+
+# ---- Boot splash / smooth VT handover -------------------------------------
+# Remove GRUB's "Loading Linux/initial ramdisk ..." text output and enable
+# the vt.handoff logic for a seamless GRUB -> Plymouth transition.
+"${BUILD_SCRIPT}/patch_grub_quiet.sh" "${DEBIAN_LIVE_CHROOT}"
+"${BUILD_SCRIPT}/patch_plymouth_units.sh" "${DEBIAN_LIVE_CHROOT}"
+"${BUILD_SCRIPT}/patch_initramfs_quiet.sh" "${DEBIAN_LIVE_CHROOT}"
+"${BUILD_SCRIPT}/patch_plymouth_persistent.sh" "${DEBIAN_LIVE_CHROOT}"
+"${BUILD_SCRIPT}/patch_initramfs_progress.sh" "${DEBIAN_LIVE_CHROOT}"
+
+# Keep the VT console loglevel at 2 after boot as well (cmdline only covers
+# early boot; sysctl keeps late-loaded driver warnings off the visible tty).
+mkdir -p "${DEBIAN_LIVE_CHROOT}/etc/sysctl.d"
+cp -f "${BUILD_CONFIG}/10-cutefish-console.conf" "${DEBIAN_LIVE_CHROOT}/etc/sysctl.d/10-cutefish-console.conf"
+
+# systemd must keep unit start/stop progress in the journal as well; this
+# covers shutdown where userspace services otherwise write status to tty.
+mkdir -p "${DEBIAN_LIVE_CHROOT}/etc/systemd/system.conf.d"
+cp -f "${BUILD_CONFIG}/10-cutefish-systemd-quiet.conf" "${DEBIAN_LIVE_CHROOT}/etc/systemd/system.conf.d/10-cutefish-quiet.conf"
+
+# The graphical Plymouth theme is already selected by update-alternatives in
+# cutefish-plymouth-theme.postinst; make the choice explicit and regenerate
+# the initramfs so plymouth and the theme are embedded.
+sudo chroot "${DEBIAN_LIVE_CHROOT}" /usr/sbin/plymouth-set-default-theme cutefish-logo
+sudo chroot "${DEBIAN_LIVE_CHROOT}" /usr/sbin/update-initramfs -u -k all
+
+# The active VT after Plymouth exits is tty1. If getty@tty1 is enabled there,
+# a login prompt flashes before SDDM switches to its X VT. SDDM opens the next
+# free VT (normally vt2), leaving tty1 blank once X is active.
+rm -f "${DEBIAN_LIVE_CHROOT}/etc/systemd/system/getty.target.wants/getty@tty1.service"
 
 cp ${BUILD_SCRIPT}/user/myuser ${DEBIAN_LIVE_CHROOT}/usr/bin
 cp ${BUILD_SCRIPT}/live/cutefish_installer ${DEBIAN_LIVE_CHROOT}/usr/bin

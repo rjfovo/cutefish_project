@@ -43,14 +43,17 @@ LABEL linux
   MENU LABEL Debian Live [BIOS/ISOLINUX]
   MENU DEFAULT
   KERNEL /live/vmlinuz
-  APPEND initrd=/live/initrd boot=live
+  APPEND initrd=/live/initrd boot=live quiet loglevel=2 systemd.show_status=0 splash vt.global_cursor_default=0 vt.handoff=7
 
 LABEL linux
   MENU LABEL Debian Live [BIOS/ISOLINUX] (nomodeset)
   MENU DEFAULT
   KERNEL /live/vmlinuz
-  APPEND initrd=/live/initrd boot=live nomodeset
+  APPEND initrd=/live/initrd boot=live quiet loglevel=2 systemd.show_status=0 splash vt.global_cursor_default=0 vt.handoff=7 nomodeset
 EOF
+
+cp "${DEBIAN_LIVE_CHROOT}/usr/share/backgrounds/cutefishos/boot-background.png" \
+    "${LIVE_BOOT}/staging/boot/grub/cutefish-background.jpg" 2>/dev/null || true
 
 cat <<'EOF' > "${LIVE_BOOT}/staging/boot/grub/grub.cfg"
 insmod part_gpt
@@ -59,22 +62,42 @@ insmod fat
 insmod iso9660
 
 insmod all_video
+insmod gfxterm
 insmod font
+insmod jpeg
+
+# Keep GRUB and the kernel/Plymouth handover in graphical framebuffer mode.
+set gfxmode=auto
+set gfxpayload=keep
+terminal_output gfxterm
 
 set default="0"
-set timeout=30
+set timeout=5
+set timeout_style=menu
+
+# Use the CutefishOS wallpaper as the GRUB background. If it is missing,
+# fall back to a plain colored menu (never the VGA text console).
+search --no-floppy --set=root --label DEBLIVE
+if background_image /boot/grub/cutefish-background.jpg; then
+    set color_normal=white/black
+    set color_highlight=black/light-gray
+else
+    set menu_color_normal=cyan/blue
+    set menu_color_highlight=white/blue
+fi
 
 # If X has issues finding screens, experiment with/without nomodeset.
+# quiet+splash lets Plymouth show the CutefishOS animation during live boot.
 
 menuentry "Debian Live [EFI/GRUB]" {
     search --no-floppy --set=root --label DEBLIVE
-    linux ($root)/live/vmlinuz boot=live
+    linux ($root)/live/vmlinuz boot=live quiet loglevel=2 systemd.show_status=0 splash vt.global_cursor_default=0 vt.handoff=7
     initrd ($root)/live/initrd
 }
 
 menuentry "Debian Live [EFI/GRUB] (nomodeset)" {
     search --no-floppy --set=root --label DEBLIVE
-    linux ($root)/live/vmlinuz boot=live nomodeset
+    linux ($root)/live/vmlinuz boot=live quiet loglevel=2 systemd.show_status=0 splash vt.global_cursor_default=0 vt.handoff=7 nomodeset
     initrd ($root)/live/initrd
 }
 EOF

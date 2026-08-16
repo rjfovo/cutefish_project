@@ -50,6 +50,8 @@ sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
         dbus \
         network-manager \
         vim \
+        plymouth \
+        plymouth-label \
         grub-common \
         grub2-common \
         grub-efi-amd64 \
@@ -161,6 +163,36 @@ sudo chroot "${DEBIAN_INSTALL_CHROOT}" << EOF
 EOF
 
 cd ${BUILD_OLD_DIR}
+
+# ---- Boot splash / smooth VT handover -------------------------------------
+# Remove GRUB's "Loading Linux/initial ramdisk ..." text output and enable
+# the vt.handoff logic for a seamless GRUB -> Plymouth transition.
+"${BUILD_SCRIPT}/patch_grub_quiet.sh" "${DEBIAN_INSTALL_CHROOT}"
+"${BUILD_SCRIPT}/patch_plymouth_units.sh" "${DEBIAN_INSTALL_CHROOT}"
+"${BUILD_SCRIPT}/patch_initramfs_quiet.sh" "${DEBIAN_INSTALL_CHROOT}"
+"${BUILD_SCRIPT}/patch_plymouth_persistent.sh" "${DEBIAN_INSTALL_CHROOT}"
+"${BUILD_SCRIPT}/patch_initramfs_progress.sh" "${DEBIAN_INSTALL_CHROOT}"
+
+# Keep the VT console loglevel at 2 after boot as well (cmdline only covers
+# early boot; sysctl keeps late-loaded driver warnings off the visible tty).
+mkdir -p "${DEBIAN_INSTALL_CHROOT}/etc/sysctl.d"
+cp -f "${BUILD_CONFIG}/10-cutefish-console.conf" "${DEBIAN_INSTALL_CHROOT}/etc/sysctl.d/10-cutefish-console.conf"
+
+# systemd must keep unit start/stop progress in the journal as well; this
+# covers shutdown where userspace services otherwise write status to tty.
+mkdir -p "${DEBIAN_INSTALL_CHROOT}/etc/systemd/system.conf.d"
+cp -f "${BUILD_CONFIG}/10-cutefish-systemd-quiet.conf" "${DEBIAN_INSTALL_CHROOT}/etc/systemd/system.conf.d/10-cutefish-quiet.conf"
+
+# Make the CutefishOS Plymouth theme explicit and embed plymouth into the
+# initramfs. Calamares will copy this rootfs to the target and its
+# plymouthcfg/grubcfg modules will keep the same theme and "quiet splash".
+sudo chroot "${DEBIAN_INSTALL_CHROOT}" /usr/sbin/plymouth-set-default-theme cutefish-logo
+sudo chroot "${DEBIAN_INSTALL_CHROOT}" /usr/sbin/update-initramfs -u -k all
+
+# The active VT after Plymouth exits is tty1. Disable getty@tty1 so no login
+# prompt appears there before SDDM switches to its X VT (normally vt2).
+rm -f "${DEBIAN_INSTALL_CHROOT}/etc/systemd/system/getty.target.wants/getty@tty1.service"
+
 cp -f ${BUILD_CONFIG}/org.kde.kpmcore.helperinterface.conf ${DEBIAN_INSTALL_CHROOT}/usr/share/dbus-1/system.d/org.kde.kpmcore.helperinterface.conf
 
 umount ${DEBIAN_INSTALL_CHROOT}/dev/pts
