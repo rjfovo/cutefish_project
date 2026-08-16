@@ -1,4 +1,6 @@
+#include "displayservice.h"
 #include "shellclient.h"
+#include "shellcoreclient.h"
 
 #include <QCommandLineParser>
 #include <QGuiApplication>
@@ -36,6 +38,8 @@ int main(int argc, char **argv)
                                       QStringLiteral("Exit automatically after the UI is loaded"));
     QCommandLineOption connectionTestOption(QStringLiteral("connection-test"),
                                             QStringLiteral("Initialize the selected QPA platform, verify the shell connection, and exit without creating a window"));
+    QCommandLineOption displayServiceTestOption(QStringLiteral("display-service-test"),
+                                                QStringLiteral("Connect to the core, register com.cutefish.Display, and exit after a short interval"));
     parser.addOption(bootOption);
     parser.addOption(loginOption);
     parser.addOption(sessionOption);
@@ -43,6 +47,7 @@ int main(int argc, char **argv)
     parser.addOption(shutdownOption);
     parser.addOption(selfTestOption);
     parser.addOption(connectionTestOption);
+    parser.addOption(displayServiceTestOption);
     parser.process(app);
 
     ShellClient::Mode mode = ShellClient::Mode::Boot;
@@ -66,6 +71,27 @@ int main(int argc, char **argv)
         mode = ShellClient::Mode::Shutdown;
 
     ShellClient shellClient(mode);
+    ShellCoreClient coreClient;
+    const QByteArray coreSocket = qgetenv("CUTEFISH_SHELL_SOCKET");
+    if (!coreSocket.isEmpty()) {
+        coreClient.setMode(static_cast<int>(mode));
+        coreClient.connectToCore(QString::fromLocal8Bit(coreSocket));
+    }
+
+    DisplayService *displayService = nullptr;
+    if (!coreSocket.isEmpty() && coreClient.connected()) {
+        displayService = new DisplayService(&coreClient, &coreClient);
+        displayService->registerService();
+    }
+
+    if (parser.isSet(displayServiceTestOption)) {
+        if (!displayService) {
+            qCritical() << "display-service-test requires CUTEFISH_SHELL_SOCKET";
+            return 1;
+        }
+        QTimer::singleShot(2500, &app, [&app]() { app.exit(0); });
+        return app.exec();
+    }
 
     if (parser.isSet(connectionTestOption)) {
         if (QGuiApplication::platformName() != QLatin1String("wayland")) {
