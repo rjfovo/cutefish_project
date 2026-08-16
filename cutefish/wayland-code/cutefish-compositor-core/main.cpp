@@ -1,3 +1,11 @@
+/*
+ * cutefish-compositor-core 入口。
+ *
+ * 模块职责：常驻特权显示核心，负责 Wayland 双 socket、窗口模型、输入焦点、
+ * 锁屏状态和最终合成。默认 VirtualBackend；--kms 进入 KMS 安全探针路径，
+ * 只有同时显式设置 CUTEFISH_KMS_ALLOW_MODESET=1 才允许申请 DRM master。
+ * 本文件不包含任何旧显示协议实现。
+ */
 #include "backend/kms_backend.h"
 #include "backend/virtual_backend.h"
 #include "core_state.h"

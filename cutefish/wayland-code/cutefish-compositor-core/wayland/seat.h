@@ -1,3 +1,8 @@
+/*
+ * Seat：wl_seat v5 输入状态与协议实现。
+ * 职责：pointer/keyboard/touch 资源、焦点 surface、keymap、输入事件发送。
+ * 线程边界：仅 core 主线程访问；事件顺序必须在 frame 中成组。
+ */
 #pragma once
 
 #include <QHash>

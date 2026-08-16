@@ -1,3 +1,7 @@
+/*
+ * InputBackend：可替换输入接口。
+ * 线程/进程边界：输入设备只允许 core 进程打开；Shell/应用不得访问。
+ */
 #pragma once
 
 #include <QString>

@@ -30,3 +30,14 @@ XDG_RUNTIME_DIR=<tmp> WAYLAND_DISPLAY=<apps-socket> QT_QPA_PLATFORM=wayland \
 ## 验收状态
 
 - stage-0 工程骨架：验收通过。
+
+## 模块迁移元数据
+
+- 原项目路径：无（新增项目）
+- 迁移后路径：`cutefish/wayland-code/cutefish-shell`
+- 迁移前依赖：不适用
+- 迁移后依赖：Qt Core/Gui/Quick/QuickControls2/DBus、wayland-client
+- 架构变化：可信 Qt Quick 客户端；Boot/Login/Session/Lock/Shutdown 五态
+- 对外接口变化：`ShellCoreClient` 连接 shell socket；`com.cutefish.Display` 会话 D-Bus
+- 功能差异/裁剪：当前为骨架，Desktop/Dock/StatusBar/Launcher 为占位
+- 测试与验收：offscreen QML、Wayland 连接、D-Bus GetOutputs 通过

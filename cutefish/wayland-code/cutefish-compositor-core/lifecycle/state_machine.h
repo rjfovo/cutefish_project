@@ -1,3 +1,8 @@
+/*
+ * LifecycleStateMachine：core 生命周期状态机。
+ * 状态：Boot -> Login -> Session <-> Lock -> Shutdown。
+ * 状态由 core 持有；Shell 只能请求迁移，不能私自改写状态。
+ */
 #pragma once
 
 #include <QObject>

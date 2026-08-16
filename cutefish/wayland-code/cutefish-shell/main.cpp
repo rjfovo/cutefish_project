@@ -1,3 +1,8 @@
+/*
+ * cutefish-shell 入口。
+ * 职责：可信 Qt Quick 客户端，承载 Boot/Login/Session/Lock/Shutdown UI。
+ * 边界：不打开 DRM/input，不执行 PAM，不截图其他应用。
+ */
 #include "displayservice.h"
 #include "shellclient.h"
 #include "shellcoreclient.h"

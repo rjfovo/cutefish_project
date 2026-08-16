@@ -1,3 +1,7 @@
+/*
+ * TouchpadManager：Wayland-only 触控板配置数据服务。
+ * 职责：持久化启用/点按/自然滚动/加速度；设备发现与 libinput 应用在 core。
+ */
 #pragma once
 
 #include <QObject>

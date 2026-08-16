@@ -1,3 +1,8 @@
+/*
+ * XdgActivation：xdg_activation_v1 token 与激活实现。
+ * 职责：生成/校验 token，激活目标 Window 并发送 activated configure。
+ * 安全边界：token 一次性使用；未知 token 忽略。
+ */
 #pragma once
 
 

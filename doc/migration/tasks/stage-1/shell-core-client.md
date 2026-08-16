@@ -29,3 +29,14 @@
 
 - Shell → core 输出管理通路：基础通过。
 - 未验收：设置应用真实 UI 联调、热插拔信号、SetMode/SetScale 端到端验证。
+
+## 模块迁移元数据
+
+- 原项目路径：无（新增 Shell 客户端）
+- 迁移后路径：`cutefish/wayland-code/cutefish-shell/{shellcoreclient,displayservice}`
+- 迁移前依赖：不适用
+- 迁移后依赖：Qt Core/DBus、wayland-client
+- 架构变化：Shell 经 shell socket 获取窗口/输出模型；普通应用不访问
+- 对外接口变化：`com.cutefish.Display`
+- 功能差异/裁剪：设置 UI 未对接
+- 测试与验收：dbus-run-session GetOutputs 通过

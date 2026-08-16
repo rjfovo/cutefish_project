@@ -35,3 +35,14 @@
 - Workspace/Window 增加窗口 id、添加/删除/状态变更信号。
 - Server 将窗口模型广播到受信 Shell 的 `cutefish_core_v1` 资源。
 - 协议冒烟测试覆盖 v2 窗口事件：PASS。
+
+## 模块迁移元数据
+
+- 原项目路径：无（新 WM 模型）
+- 迁移后路径：`cutefish/wayland-code/cutefish-compositor-core/{wm,wayland}`
+- 迁移前依赖：不适用
+- 迁移后依赖：libwayland-server、wayland-protocols
+- 架构变化：Window/Workspace 模型；xdg toplevel/popup/positioner
+- 对外接口变化：`cutefish_core_v1` v2 窗口事件
+- 功能差异/裁剪：move/resize 交互未完成
+- 测试与验收：协议冒烟测试通过；交互未验收

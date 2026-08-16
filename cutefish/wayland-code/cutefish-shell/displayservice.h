@@ -1,3 +1,8 @@
+/*
+ * DisplayService：用户会话 D-Bus com.cutefish.Display。
+ * 职责：普通设置应用 -> Shell -> cutefish_core_v1 -> core 的输出管理通路。
+ * 安全边界：普通应用不能直接绑定 cutefish_core_v1。
+ */
 #pragma once
 
 #include <QDBusConnection>

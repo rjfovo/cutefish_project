@@ -1,3 +1,8 @@
+/*
+ * InstallerBackend：cutefish-installer 固定流程状态机。
+ * 安全边界：stage-0 dangerousJobsAllowed=false，beginInstall 一律拒绝；
+ * 分区/格式化/grub/efivarfs 只能由后续 polkit helper 在专用硬件环境执行。
+ */
 #pragma once
 
 #include <QObject>

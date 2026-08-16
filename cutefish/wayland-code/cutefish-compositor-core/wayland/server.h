@@ -1,8 +1,17 @@
+/*
+ * WaylandServer：双 socket Wayland 服务。
+ * 安全边界：
+ *   - apps socket 不注册 cutefish_core_v1；
+ *   - shell socket 注册 cutefish_core_v1；
+ *   - 同一 Seat/Workspace 跨两个 socket 共享状态。
+ * 进程边界：Shell 是可重启客户端；core 崩溃时由 systemd 重启并回到 Boot/Login。
+ */
 #pragma once
 
 #include "core_state.h"
 #include "input/input_backend.h"
 #include "wayland/seat.h"
+#include "wayland/xdg_activation.h"
 #include "wm/workspace.h"
 
 #include <QObject>
@@ -31,6 +40,7 @@ public:
 
     Workspace *workspace() const;
     Seat *seat() const;
+    XdgActivation *activation() const;
     void setInputBackend(InputBackend *backend);
     InputBackend *inputBackend() const;
 
@@ -50,6 +60,7 @@ private:
     CoreState *m_state = nullptr;
     Workspace *m_workspace = nullptr;
     Seat *m_seat = nullptr;
+    XdgActivation *m_activation = nullptr;
     InputBackend *m_inputBackend = nullptr;
     wl_display *m_appsDisplay = nullptr;
     wl_display *m_shellDisplay = nullptr;

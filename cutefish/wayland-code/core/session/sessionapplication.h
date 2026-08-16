@@ -1,3 +1,8 @@
+/*
+ * Wayland-only cutefish-session 会话服务。
+ * 职责：用户环境、语言、网络代理、用户 daemon 启动和 logind 电源动作。
+ * 不再启动窗口管理器；桌面/Dock/顶栏/启动器由 cutefish-shell 承载。
+ */
 #pragma once
 
 #include <QCoreApplication>

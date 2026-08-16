@@ -1,3 +1,8 @@
+/*
+ * LibinputBackend：libinput/udev seat 输入后端。
+ * 职责：初始化 seat、提供 libinput fd/dispatch，将事件交给 Seat 翻译。
+ * 安全边界：不执行设备 grab；测试环境只做能力探针。
+ */
 #pragma once
 
 #include "input/input_backend.h"

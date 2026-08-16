@@ -36,3 +36,14 @@
 - Seat 增加 pointer axis/source/discrete/stop/frame、touch down/motion/up/frame/cancel、
   keyboard repeat_info。
 - libinput 事件翻译增加 POINTER_AXIS、TOUCH_DOWN/MOTION/UP/FRAME/CANCEL。
+
+## 模块迁移元数据
+
+- 原项目路径：无（新增 Seat）
+- 迁移后路径：`cutefish/wayland-code/cutefish-compositor-core/wayland/seat.*`
+- 迁移前依赖：不适用
+- 迁移后依赖：libwayland-server、libxkbcommon、libinput
+- 架构变化：单一 Seat 跨双 socket；焦点由 Workspace 联动
+- 对外接口变化：wl_seat v5、keymap、enter/leave、axis/touch/repeat
+- 功能差异/裁剪：轴事件仅垂直滚轮；触摸无形状/方向
+- 测试与验收：keymap/enter/modifiers 协议测试通过；真实输入端到端未验收

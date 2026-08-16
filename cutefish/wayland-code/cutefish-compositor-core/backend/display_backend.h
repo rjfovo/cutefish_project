@@ -1,3 +1,8 @@
+/*
+ * DisplayBackend：可替换显示后端接口。
+ * 线程/进程边界：仅 core 主线程调用；backend 不得启动业务线程。
+ * 安全边界：KmsBackend 的 master/modeset 必须由显式门控授权。
+ */
 #pragma once
 
 #include <QImage>

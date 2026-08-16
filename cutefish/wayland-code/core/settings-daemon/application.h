@@ -1,3 +1,8 @@
+/*
+ * Wayland-only cutefish-settings-daemon。
+ * 职责：Theme/Brightness/Battery/Language/Dock/DefaultApps 用户会话 D-Bus 服务。
+ * 输入配置只写 Cutefish 配置文件；不打开旧显示设备属性。
+ */
 #pragma once
 
 #include <QGuiApplication>

@@ -1,3 +1,7 @@
+/*
+ * VirtualBackend：CI/调试用虚拟输出后端。
+ * 职责：无 DRM 设备访问，提供固定 VIRTUAL-1 输出和空合成提交。
+ */
 #pragma once
 
 #include "backend/display_backend.h"

@@ -38,3 +38,14 @@ dpkg-deb -c cutefish/output/packages/core/cutefish-core_0.9.0_amd64.deb
 
 - stage-0 cutefish-core 包边界：验收通过。
 - 后续服务等价性回归：随 stage-1 功能矩阵推进。
+
+## 模块迁移元数据
+
+- 原项目路径：`cutefish/code/core`
+- 迁移后路径：`cutefish/wayland-code/core`
+- 迁移前依赖：X11/XCB/KF6WindowSystem/KWin/SDDM helper 相关
+- 迁移后依赖：Qt Core/Gui/Widgets/Quick/DBus/Xml、polkit-qt6、KF6IdleTime；无 kwin/xwayland/sddm
+- 架构变化：Wayland-only 包边界，X11 组件不进入构建清单
+- 对外接口变化：不安装 xsession；x-session-manager alternative 不注册
+- 功能差异/裁剪：cupdatecursor/xembed-sni-proxy/sddm-helper/X11 session 移除
+- 测试与验收：cutefish-core_0.9.0 deb 构建与依赖扫描通过

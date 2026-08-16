@@ -1,3 +1,8 @@
+/*
+ * Mouse：Wayland-only 鼠标配置数据服务。
+ * 职责：持久化 leftHanded/acceleration/naturalScroll/pointerAcceleration；
+ *       实际输入配置由 compositor core 读取并应用。
+ */
 #pragma once
 
 #include <QObject>

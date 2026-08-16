@@ -1,3 +1,8 @@
+/*
+ * ShellCoreClient：Shell 到 core 的 cutefish_core_v1 v2 客户端。
+ * 安全边界：只连接 shell 专用 socket；普通应用不得使用本类。
+ * 线程边界：仅在 Qt 主线程使用；Wayland fd 由 QSocketNotifier 驱动。
+ */
 #pragma once
 
 #include "cutefish-core-v1-client-protocol.h"

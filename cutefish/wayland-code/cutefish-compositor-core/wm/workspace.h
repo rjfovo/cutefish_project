@@ -1,3 +1,7 @@
+/*
+ * Workspace：窗口集合、焦点和 z-order 基础模型。
+ * 线程边界：仅 core 主线程访问；信号用于 Seat focus 和 cutefish_core_v1 广播。
+ */
 #pragma once
 
 #include <QList>

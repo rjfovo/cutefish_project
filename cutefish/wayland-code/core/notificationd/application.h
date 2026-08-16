@@ -1,3 +1,8 @@
+/*
+ * Wayland-only cutefish-notificationd 数据服务。
+ * 职责：org.freedesktop.Notifications D-Bus 数据、历史、免打扰。
+ * 弹窗 UI 由 cutefish-shell 通知 role 渲染；本服务不再创建窗口。
+ */
 #pragma once
 
 #include <QCoreApplication>

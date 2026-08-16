@@ -1,3 +1,8 @@
+/*
+ * Window：单个 xdg_toplevel 窗口模型。
+ * 生命周期：xdg_surface.get_toplevel 创建；client 断开或 destroy 时销毁。
+ * 线程边界：仅 core 主线程访问。
+ */
 #pragma once
 
 #include <QObject>

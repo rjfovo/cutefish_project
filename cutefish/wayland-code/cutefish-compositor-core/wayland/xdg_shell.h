@@ -1,3 +1,8 @@
+/*
+ * xdg-shell 最小实现入口。
+ * 职责：xdg_wm_base/xdg_surface/xdg_toplevel/xdg_popup/xdg_positioner。
+ * 状态机：toplevel 状态变化必须经 configure 事件通知客户端。
+ */
 #pragma once
 
 #include "wayland/server.h"

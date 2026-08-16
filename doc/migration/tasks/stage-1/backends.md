@@ -36,3 +36,14 @@
 
 - 未验收。待完成：真实 modeset/page flip、libinput 事件到 Wayland seat、logind 生命周期联调。
 - CONFLICT-006：AMD/Intel 物理 GPU 复验仍待设备或明确放宽策略。
+
+## 模块迁移元数据
+
+- 原项目路径：无（新增 backend 实现）
+- 迁移后路径：`cutefish/wayland-code/cutefish-compositor-core/{backend,input,session}`
+- 迁移前依赖：不适用
+- 迁移后依赖：libdrm、gbm、libinput、libudev、QtDBus
+- 架构变化：DisplayBackend/InputBackend/SessionBackend 接口化
+- 对外接口变化：`--kms` 安全探针、`CUTEFISH_KMS_ALLOW_MODESET` 门控
+- 功能差异/裁剪：未执行真实 modeset/page flip；VMware 能力探针通过
+- 测试与验收：本地编译/CTest、测试服务器 KMS/GBM/libinput 探针通过；真机 modeset 未验收

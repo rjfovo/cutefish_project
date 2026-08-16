@@ -1,3 +1,8 @@
+/*
+ * KmsBackend：DRM/KMS + GBM 显示后端。
+ * 职责：输出枚举、模式选择、DPMS、GBM buffer 分配、授权后的 modeset/page flip。
+ * 安全边界：默认只打开设备并枚举，不申请 DRM master；未授权绝不改变当前显示。
+ */
 #pragma once
 
 #include "backend/display_backend.h"

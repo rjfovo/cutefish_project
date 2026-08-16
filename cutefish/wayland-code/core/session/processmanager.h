@@ -1,3 +1,8 @@
+/*
+ * ProcessManager：用户会话 daemon/autostart 管理。
+ * 职责：启动 settings-daemon/powerman/notificationd/polkit-agent/clipboard；
+ *       不再包含旧显示服务/窗口管理器启动逻辑。
+ */
 #pragma once
 
 #include <QObject>

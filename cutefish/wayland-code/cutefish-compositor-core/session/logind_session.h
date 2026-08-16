@@ -1,3 +1,7 @@
+/*
+ * LogindSession：systemd-logind 会话后端。
+ * 职责：VT 切换、锁屏、挂起/关机请求；真正授权由 logind/polkit 完成。
+ */
 #pragma once
 
 #include "session/session_backend.h"
