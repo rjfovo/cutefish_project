@@ -1,0 +1,15 @@
+# CutefishOS target rootfs fixed package manifest (stage-0 boundary).
+# This manifest intentionally contains no SDDM, Calamares, display-manager
+# server stack, or legacy session package.
+cutefish-compositor-core
+cutefish-shell
+cutefish-core
+qt6-wayland
+qt6-qpa-plugins
+libqt6gui6
+qml6-module-qtquick
+qml6-module-qtquick-controls
+qml6-module-qtquick-layouts
+qml6-module-qtquick-window
+qml6-module-qtquick-shapes
+# Plymouth is allowed only as initramfs splash support in stage-3.

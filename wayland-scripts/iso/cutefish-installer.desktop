@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install CutefishOS
+Comment=CutefishOS dedicated installer
+Exec=/usr/bin/cutefish-installer
+Icon=system-installer
+Terminal=false
+Categories=System;Installer;

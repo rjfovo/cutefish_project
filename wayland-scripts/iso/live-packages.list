@@ -1,0 +1,21 @@
+# Live environment packages needed by the dedicated installer workflow.
+cutefish-compositor-core
+cutefish-shell
+cutefish-installer
+cutefish-core
+polkitd
+pkexec
+cutefish-polkit-agent
+qt6-wayland
+qt6-qpa-plugins
+squashfs-tools
+rsync
+fdisk
+parted
+partprobe
+udev
+dosfstools
+e2fsprogs
+grub-efi-amd64
+grub-efi-amd64-bin
+grub-efi-amd64-signed

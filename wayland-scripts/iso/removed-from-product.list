@@ -1,0 +1,24 @@
+# Packages/features that must never enter the new product runtime chain.
+# The frozen legacy build_iso/ tree still contains references to these items;
+# this manifest is the new authoritative exclusion list.
+sddm
+sddm-theme
+calamares
+calamares-settings
+xserver-xorg
+xserver-xorg-core
+xinit
+xterm
+xauth
+xrdb
+xwayland
+kwin-x11
+kwin-wayland
+kwin-common
+kwin-plugins
+cutefish-sddm-theme
+cutefish-calamares
+cutefish-calamares-settings
+cutefish-kwin-plugins
+cutefish-plymouth-theme-rootfs-phase
+/usr/share/xsessions/cutefish-xsession.desktop
