@@ -21,6 +21,20 @@ struct XdgResourceData {
     Window *window = nullptr;
 };
 
+struct XdgPositionerData : XdgResourceData {
+    QSize size;
+    QRect anchorRect;
+    uint32_t anchor = XDG_POSITIONER_ANCHOR_NONE;
+    uint32_t gravity = XDG_POSITIONER_GRAVITY_NONE;
+    uint32_t constraintAdjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_NONE;
+    QPoint offset;
+};
+
+struct XdgPopupData : XdgResourceData {
+    XdgPositionerData *positioner = nullptr;
+    QRect geometry;
+};
+
 struct xdg_wm_base_interface xdgWmBaseImplementation;
 struct xdg_positioner_interface xdgPositionerImplementation;
 struct xdg_surface_interface xdgSurfaceImplementation;
@@ -47,7 +61,7 @@ void xdgWmBaseDestroy(wl_client *client, wl_resource *resource)
 void xdgWmBaseCreatePositioner(wl_client *client, wl_resource *resource, uint32_t id)
 {
     auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
-    auto *rd = new XdgResourceData;
+    auto *rd = new XdgPositionerData;
     rd->resource = wl_resource_create(client, &xdg_positioner_interface, kXdgVersion, id);
     if (!rd->resource) {
         delete rd;
@@ -92,49 +106,50 @@ void xdgPositionerDestroy(wl_client *client, wl_resource *resource)
 void xdgPositionerSetSize(wl_client *client, wl_resource *resource, int32_t width, int32_t height)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(width)
-    Q_UNUSED(height)
+    auto *data = static_cast<XdgPositionerData *>(wl_resource_get_user_data(resource));
+    if (data)
+        data->size = QSize(width, height);
 }
 
 void xdgPositionerSetAnchorRect(wl_client *client, wl_resource *resource,
                                 int32_t x, int32_t y, int32_t width, int32_t height)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(x)
-    Q_UNUSED(y)
-    Q_UNUSED(width)
-    Q_UNUSED(height)
+    auto *data = static_cast<XdgPositionerData *>(wl_resource_get_user_data(resource));
+    if (data)
+        data->anchorRect = QRect(x, y, width, height);
 }
 
 void xdgPositionerSetAnchor(wl_client *client, wl_resource *resource, uint32_t anchor)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(anchor)
+    auto *data = static_cast<XdgPositionerData *>(wl_resource_get_user_data(resource));
+    if (data)
+        data->anchor = anchor;
 }
 
 void xdgPositionerSetGravity(wl_client *client, wl_resource *resource, uint32_t gravity)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(gravity)
+    auto *data = static_cast<XdgPositionerData *>(wl_resource_get_user_data(resource));
+    if (data)
+        data->gravity = gravity;
 }
 
 void xdgPositionerSetConstraintAdjustment(wl_client *client, wl_resource *resource, uint32_t adjustment)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(adjustment)
+    auto *data = static_cast<XdgPositionerData *>(wl_resource_get_user_data(resource));
+    if (data)
+        data->constraintAdjustment = adjustment;
 }
 
 void xdgPositionerSetOffset(wl_client *client, wl_resource *resource, int32_t x, int32_t y)
 {
     Q_UNUSED(client)
-    Q_UNUSED(resource)
-    Q_UNUSED(x)
-    Q_UNUSED(y)
+    auto *data = static_cast<XdgPositionerData *>(wl_resource_get_user_data(resource));
+    if (data)
+        data->offset = QPoint(x, y);
 }
 
 
@@ -197,9 +212,11 @@ void xdgSurfaceGetPopup(wl_client *client, wl_resource *resource, uint32_t id,
                         wl_resource *parent, wl_resource *positioner)
 {
     Q_UNUSED(parent)
-    Q_UNUSED(positioner)
     auto *data = static_cast<XdgResourceData *>(wl_resource_get_user_data(resource));
-    auto *rd = new XdgResourceData;
+    auto *positionerData = positioner
+        ? static_cast<XdgPositionerData *>(wl_resource_get_user_data(positioner))
+        : nullptr;
+    auto *rd = new XdgPopupData;
     rd->resource = wl_resource_create(client, &xdg_popup_interface, kXdgVersion, id);
     if (!rd->resource) {
         delete rd;
@@ -207,8 +224,18 @@ void xdgSurfaceGetPopup(wl_client *client, wl_resource *resource, uint32_t id,
         return;
     }
     rd->server = data ? data->server : nullptr;
+    rd->surface = data ? data->surface : nullptr;
+    rd->positioner = positionerData;
+    if (positionerData) {
+        QPoint pos = positionerData->anchorRect.topLeft() + positionerData->offset;
+        rd->geometry = QRect(pos, positionerData->size);
+    }
     wl_resource_set_implementation(rd->resource, &xdgPopupImplementation, rd, xdgDestroyData);
-    xdg_popup_send_configure(rd->resource, 0, 0, 0, 0);
+
+    const uint32_t serial = wl_display_next_serial(wl_client_get_display(client));
+    xdg_popup_send_configure(rd->resource, rd->geometry.x(), rd->geometry.y(),
+                             rd->geometry.width(), rd->geometry.height());
+    xdg_surface_send_configure(resource, serial);
 }
 
 void xdgSurfaceSetWindowGeometry(wl_client *client, wl_resource *resource,

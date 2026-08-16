@@ -14,15 +14,16 @@
   - set_title/set_app_id 写入窗口模型；
   - maximize/unmaximize/fullscreen/unfullscreen/minimize 状态迁移并发送带 states 的 configure；
   - toplevel destroy/client 断开时销毁 Workspace Window。
-- `tests/wayland_protocol_smoke.cpp`：扩展 xdg-shell 客户端冒烟，验证初始 activated configure
-  和 maximized configure states。
+- `tests/wayland_protocol_smoke.cpp`：扩展 xdg-shell 客户端冒烟，验证初始 activated configure、
+  maximized configure states，以及 xdg_positioner → xdg_popup 初始 configure 几何。
 
 ## 测试结果
 
 - `ctest --test-dir cutefish/output/build/cutefish-compositor-core/cmake --output-on-failure`：PASS。
-- 测试覆盖：双 socket 隔离、cutefish_core_v1、xdg_toplevel 创建/configure/最大化状态。
+- 测试覆盖：双 socket 隔离、cutefish_core_v1、xdg_toplevel 创建/configure/最大化状态、
+  xdg_positioner/xdg_popup 初始 configure 几何。
 
 ## 验收状态
 
-- 未验收。待完成：move/resize 交互、焦点/z-order 策略、最小化恢复、弹出窗口 positioner、
-  与 Shell 私有协议窗口模型对接。
+- 未验收。待完成：move/resize 交互、焦点/z-order 策略、最小化恢复、Qt Quick
+  真实菜单/ComboBox/ToolTip 回归、与 Shell 私有协议窗口模型对接。

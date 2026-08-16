@@ -40,6 +40,31 @@ struct ToplevelState {
     bool maximized = false;
 };
 
+struct PopupState {
+    int configureCount = 0;
+    int x = -1;
+    int y = -1;
+    int width = -1;
+    int height = -1;
+};
+
+void popupConfigure(void *data, xdg_popup *popup, int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    Q_UNUSED(popup)
+    auto *state = static_cast<PopupState *>(data);
+    state->configureCount++;
+    state->x = x;
+    state->y = y;
+    state->width = width;
+    state->height = height;
+}
+
+void popupDone(void *data, xdg_popup *popup)
+{
+    Q_UNUSED(data)
+    Q_UNUSED(popup)
+}
+
 void toplevelConfigure(void *data, xdg_toplevel *toplevel, int32_t width, int32_t height, wl_array *states)
 {
     Q_UNUSED(toplevel)
@@ -173,6 +198,32 @@ bool scanSocket(const QString &socketName, RegistryState *state)
                 qCritical() << "xdg maximized configure missing";
                 ok = false;
             }
+
+            xdg_positioner *positioner = xdg_wm_base_create_positioner(wm);
+            xdg_positioner_set_size(positioner, 200, 100);
+            xdg_positioner_set_anchor_rect(positioner, 0, 0, 200, 100);
+            xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_TOP_LEFT);
+            xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT);
+            xdg_positioner_set_offset(positioner, 10, 20);
+            xdg_popup *popup = xdg_surface_get_popup(xdgSurface, xdgSurface, positioner);
+            PopupState popupState;
+            xdg_popup_listener popupListener {};
+            popupListener.configure = popupConfigure;
+            popupListener.popup_done = popupDone;
+            xdg_popup_add_listener(popup, &popupListener, &popupState);
+            if (wl_display_roundtrip(display) < 0) {
+                qCritical() << "xdg popup roundtrip failed";
+                ok = false;
+            }
+            if (popupState.configureCount < 1 || popupState.x != 10 || popupState.y != 20 ||
+                popupState.width != 200 || popupState.height != 100) {
+                qCritical() << "xdg popup configure mismatch"
+                            << popupState.configureCount << popupState.x << popupState.y
+                            << popupState.width << popupState.height;
+                ok = false;
+            }
+            xdg_popup_destroy(popup);
+            xdg_positioner_destroy(positioner);
             xdg_toplevel_destroy(toplevel);
             xdg_surface_destroy(xdgSurface);
             wl_surface_destroy(surface);
