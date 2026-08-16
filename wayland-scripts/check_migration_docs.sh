@@ -36,6 +36,8 @@ expected=(
     "stage-1/seat-input.md"
     "stage-1/xdg-activation.md"
     "stage-1/shell-core-client.md"
+    "stage-1/data-device.md"
+    "stage-1/shell-qml-models.md"
 )
 
 fail=0
