@@ -91,12 +91,23 @@ QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     exit 1
 }
 
-# 4. KMS guard: requesting the KMS backend must refuse without touching devices.
+# 4. KMS guard: on machines without DRM the backend must fail safely; on
+# machines with DRM it must never acquire master unless explicitly authorized.
 echo "== KMS guard"
 set +e
 "$core_bin" --kms >/tmp/cutefish-stage0-kms.log 2>&1
 kms_rc=$?
 set -e
-[ "$kms_rc" -eq 2 ] || { cat /tmp/cutefish-stage0-kms.log >&2; echo "ERROR: unexpected KMS guard rc=$kms_rc" >&2; exit 1; }
+if [ "$kms_rc" -eq 0 ]; then
+    cat /tmp/cutefish-stage0-kms.log >&2
+    echo "ERROR: KmsBackend unexpectedly succeeded in unauthorized mode" >&2
+    exit 1
+fi
+cat /tmp/cutefish-stage0-kms.log
+# 1 = DRM device unavailable; 2 = modeset path refused.
+case "$kms_rc" in
+    1|2) ;;
+    *) echo "ERROR: unexpected KMS guard rc=$kms_rc" >&2; exit 1 ;;
+esac
 
 echo "PASS: stage-0 VirtualBackend dual-socket, Qt shell connection, installer UI and KMS guard checks"
